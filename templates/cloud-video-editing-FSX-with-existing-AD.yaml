@@ -1,0 +1,271 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  This template deploys the Cloud Video Editing AWS Sample. **WARNING** This template
+  creates Amazon EC2 Windows instance and related resources. You will be billed for
+  the AWS resources used if you create a stack from this template.  (qs-1npjhtsrr)
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Network Configuration
+        Parameters:
+          - VPCID
+      - Label:
+          default: Amazon EC2 Configuration
+        Parameters:
+          - EditHostInstanceType
+          - EditHostAccessCIDR
+          - PublicSubnet1ID
+          - DomainMemberSGID
+          - KeyPairName
+      - Label:
+          default: FSX Configuration
+        Parameters:
+          - FileSystemSize
+          - FSxThroughput
+          - AZDeploymentMode
+          - PrivateSubnet1AID
+          - PrivateSubnet2AID
+      - Label:
+          default: Microsoft Active Directory Configuration
+        Parameters:
+          - DirectoryId
+          - DomainDNSName
+          - DomainNetBIOSName
+          - DomainAdminUser
+          - DomainAdminPassword
+      - Label:
+          default: CloudFormation Resource Location
+        Parameters:
+          - CloudFormationBucketName
+          - CloudFormationKeyPrefix
+    ParameterLabels:
+      DomainAdminUser:
+        default: Domain Admin User
+      DomainAdminPassword:
+        default: Domain Admin Password
+      DomainDNSName:
+        default: Domain DNS Name
+      DomainNetBIOSName:
+        default: Domain NetBIOS Name
+      DirectoryId:
+        default: Domain Directory ID in AWS Directory Service
+      PublicSubnet1ID:
+        default: Subnet for cloud video edit host - should be public for Internet access
+      EditHostAccessCIDR:
+        default: Edit Host Access CIDR
+      KeyPairName:
+        default: Key Pair Name
+      EditHostInstanceType:
+        default: Amazon EC2 instance type for the video editing server
+      FileSystemSize:
+        default: The FSx storage capacity of the file system being created. 32 GiB - 65,536 GiB (64 TiB)
+      FSxThroughput:
+        default: >-
+          Throughput capacity of the Amazon FSx file system [MBps]
+      AZDeploymentMode:
+        default: 'Specifies the FSx file system deployment type'
+      PrivateSubnet1AID:
+        default: Should be private for local access
+      PrivateSubnet2AID:
+        default: Should be private for local access
+      CloudFormationBucketName:
+        default: CloudFormation S3 Bucket Name
+      CloudFormationKeyPrefix:
+        default: CloudFormation S3 Key Prefix
+Parameters:
+  DomainAdminUser:
+    AllowedPattern: '[a-zA-Z0-9]*'
+    Default: Admin
+    Description: >-
+      User name for the account that will be added as Domain Administrator.
+      This is separate from the default "Administrator" account
+    MaxLength: 25
+    MinLength: 5
+    Type: String
+  DomainAdminPassword:
+    AllowedPattern: (?=^.{6,255}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*
+    Description: >-
+      Password for the domain admin user. Must be at least 8 characters
+      containing letters, numbers and symbols
+    MaxLength: 32
+    MinLength: 8
+    NoEcho: 'true'
+    Type: String
+  DomainDNSName:
+    AllowedPattern: '[a-zA-Z0-9]+\..+'
+    Default: example.com
+    Description: Fully qualified domain name (FQDN) of the forest root domain e.g. example.com
+    MaxLength: 255
+    MinLength: 2
+    Type: String
+  DomainNetBIOSName:
+    AllowedPattern: '[a-zA-Z0-9]+'
+    Default: example
+    Description: >-
+      NetBIOS name of the domain (up to 15 characters) for users of earlier
+      versions of Windows e.g. EXAMPLE
+    MaxLength: 15
+    MinLength: 1
+    Type: String
+  EditHostAccessCIDR:
+    ConstraintDescription: EditHostAccessCIDR parameter must be in the form x.x.x.x/FIXME
+    Description: CIDR block to control access to the Edit Host.
+    Type: String
+  KeyPairName:
+    Description: >-
+      Public/private key pairs allow you to securely connect to your instance
+      after it launches
+    Type: AWS::EC2::KeyPair::KeyName
+  EditHostInstanceType:
+    Description: Amazon EC2 instance type for the video editing server
+    Type: String
+    Default: g4dn.4xlarge
+    AllowedValues:
+      - g4dn.xlarge
+      - g4dn.2xlarge
+      - g4dn.4xlarge
+      - g4dn.8xlarge
+      - g4dn.16xlarge
+      - g4dn.12xlarge
+  CloudFormationBucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: >-
+      CloudFormation assets bucket name can include numbers, lowercase
+      letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-).
+    Default: my-cfn-bucket
+    Description: >-
+      S3 bucket name for the CloudFormation assets. The bucket name
+      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-).
+    Type: String
+  CloudFormationKeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/]*$
+    ConstraintDescription: >-
+      CloudFormation assets key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), and forward slash (/).
+    Default: my-cfn-key/
+    Description: >-
+      S3 key prefix for the CloudFormation assets. The key prefix can include numbers,
+      lowercase letters, uppercase letters, hyphens (-), and forward slash (/).
+    Type: String
+  Project:
+    Description: Tag used for billing and resource groups
+    Type: String
+    Default: cloud-vide-edit-fsx-existing-env
+  DomainMemberSGID:
+    Description: ID of the Domain Member Security Group (e.g., sg-7f16e910)
+    Type: AWS::EC2::SecurityGroup::Id
+  PublicSubnet1ID:
+    Description: Subnet for edit host - should be public for remote access
+    Type: String
+  PrivateSubnet1AID:
+    Description: Primary subnet for FSx - should be private for local access
+    Type: String
+  PrivateSubnet2AID:
+    Description: Secondary subnet for FSx - should be private for local access
+    Type: String
+  VPCID:
+    Description: ID of the VPC (e.g., vpc-0343606e)
+    Type: AWS::EC2::VPC::Id
+  DirectoryId:
+    Description: ID of the Managed Active Directory (e.g., d-23048de12)
+    Type: String
+  FileSystemSize:
+    Description: The FSx storage capacity of the file system being created. 32 GiB - 65,536 GiB (64 TiB)
+    Type: Number
+    Default: 1024
+    MinValue: 32
+    MaxValue: 65536
+  FSxThroughput:
+    Description: >-
+      The throughput capacity of the Amazon FSx file system, measured in megabytes per second 
+      in powers of 2 (8, 16, 32, ... , 1024), with the recommended value based on the file 
+      system size: 8 for <800 GiB, 16 for <1600 GiB, ... 512 for <51200 GiB, 1024 for >=51200 GiB
+    Type: Number
+    AllowedValues:
+      - 8
+      - 16
+      - 32
+      - 64
+      - 128
+      - 256
+      - 512
+      - 1024
+      - 2048
+  AZDeploymentMode:
+    Description: 'Specifies the FSx file system deployment type'
+    Type: String
+    Default: SINGLE_AZ_2
+    AllowedValues:
+      - SINGLE_AZ_2
+      - MULTI_AZ_1
+
+Resources:
+  HostSecGrpStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}templates/cloud-video-editing-host-security-group.yaml'
+      Parameters:
+        HostAccessCIDR: !Ref 'EditHostAccessCIDR'
+        VPCID: !Ref 'VPCID'
+  CloudVideoEditingStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}templates/cloud-video-editing-edit-host.yaml'
+      Parameters:
+        DomainAdminPassword: !Ref 'DomainAdminPassword'
+        DomainAdminUser: !Ref 'DomainAdminUser'
+        DomainDNSName: !Ref 'DomainDNSName'
+        DomainNetBIOSName: !Ref 'DomainNetBIOSName'
+        InstanceType: !Ref 'EditHostInstanceType'
+        KeyPairName: !Ref 'KeyPairName'
+        HostSubnetId: !Ref 'PublicSubnet1ID'
+        FSxNetworkFileShare: !GetAtt 'FSXDNSNameStack.Outputs.FSxNetworkShare'
+        SGWNetworkFileShare: 'NONE'
+        CloudFormationBucketName: !Ref 'CloudFormationBucketName'
+        CloudFormationKeyPrefix: !Ref 'CloudFormationKeyPrefix'
+        ExistingHostSecurityGroupID: !GetAtt 'HostSecGrpStack.Outputs.EditInstanceSG'
+  FSXGatewayStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${CloudFormationBucketName}.s3.amazonaws.com/${CloudFormationKeyPrefix}templates/cloud-video-editing-fsx-filesystem.yaml'
+      Parameters:
+        VPCID: !Ref 'VPCID'
+        DirectoryId: !Ref 'DirectoryId'
+        FileSystemSize: !Ref FileSystemSize
+        FSxThroughput: !Ref FSxThroughput
+        AZDeploymentMode: !Ref AZDeploymentMode
+        PrimarySubnetAccess: !Ref 'PrivateSubnet1AID'
+        SecondarySubnetAccess: !Ref 'PrivateSubnet2AID'
+        Project: !Ref Project
+        DomainMemberSGID: !Ref 'DomainMemberSGID'
+        HostAccessSGID: !GetAtt 'HostSecGrpStack.Outputs.EditInstanceSG'
+  FSXDNSNameStack:
+    DependsOn: FSXGatewayStack
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${CloudFormationBucketName}.s3.amazonaws.com/${CloudFormationKeyPrefix}templates/cloud-video-editing-fsx-dns-name.yaml'
+      Parameters:
+        Project: !Ref Project
+        CloudFormationBucketName: !Ref CloudFormationBucketName
+        LambdaFunctionS3Key: !Sub '${CloudFormationKeyPrefix}sgw/fsx-dns-name.zip'
+        Boto3LayerS3Key: !Sub '${CloudFormationKeyPrefix}sgw/boto3-layer.zip'
+        FSxFileSystemID: !GetAtt 'FSXGatewayStack.Outputs.FSxFileSystem'
+        
+Outputs:
+  HostSecurityGroupID:
+    Value: !GetAtt 'HostSecGrpStack.Outputs.EditInstanceSG'
+    Description: Host Security Group ID - for controlling ingress into remote edit host
+  EditHostInstanceID:
+    Description: InstanceId of the newly created EC2 instance
+    Value: !GetAtt 'CloudVideoEditingStack.Outputs.InstanceId'
+  FSXSecurityGroup:
+    Value: !GetAtt 'FSXGatewayStack.Outputs.FSXSecurityGroup'
+    Description: Security group for the FSX FileSystem created
+  FSxFileSystem:
+    Value: !GetAtt 'FSXGatewayStack.Outputs.FSxFileSystem'
+    Description: The FSX FileSystem Created    
+  FSxNetworkShare:
+    Description: The Network Share Mapping for the FSX FileSystem Created
+    Value: !GetAtt 'FSXDNSNameStack.Outputs.FSxNetworkShare'

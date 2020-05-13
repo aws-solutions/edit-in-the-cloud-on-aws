@@ -1,0 +1,255 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >-
+  This template deploys the Cloud Video Editing AWS Sample. **WARNING** This template
+  creates Amazon EC2 Windows instance and related resources. You will be billed for
+  the AWS resources used if you create a stack from this template.
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Network Configuration
+        Parameters:
+          - VPCID
+      - Label:
+          default: Amazon EC2 Configuration
+        Parameters:
+          - EditHostInstanceType
+          - EditHostAccessCIDR
+          - PublicSubnet1ID
+          - KeyPairName
+      - Label:
+          default: Storage Gateway Configuration
+        Parameters:
+          - AssetS3BucketName
+          - PrivateSubnet1AID
+          - sgwInstanceType
+          - sgwVolumeType
+          - sgwCacheSize
+          - sgwProvisionedIOPS
+      - Label:
+          default: Microsoft Active Directory Configuration
+        Parameters:
+          - DomainDNSName
+          - DomainNetBIOSName
+          - DomainAdminUser
+          - DomainAdminPassword
+      - Label:
+          default: CloudFormation Resource Location
+        Parameters:
+          - CloudFormationBucketName
+          - CloudFormationKeyPrefix
+    ParameterLabels:
+      DomainAdminUser:
+        default: Domain Admin User
+      DomainAdminPassword:
+        default: Domain Admin Password
+      DomainDNSName:
+        default: Domain DNS Name
+      DomainNetBIOSName:
+        default: Domain NetBIOS Name
+      PublicSubnet1ID:
+        default: Subnet for cloud video edit host
+      EditHostAccessCIDR:
+        default: Edit Host Access CIDR
+      KeyPairName:
+        default: Key Pair Name
+      EditHostInstanceType:
+        default: Amazon EC2 instance type for the video editing server
+      AssetS3BucketName:
+        default: Media Asset S3 Bucket Name
+      sgwInstanceType:
+        default: Storage Gateway EC2 Instance Type
+      sgwVolumeType:
+        default: Storage Gateway cache volume EBS volume type
+      sgwCacheSize:
+        default: Storage Gateway cache volume EBS volume size
+      sgwProvisionedIOPS:
+        default: Storage Gateway cache volume EBS provisioned IOPS
+      PrivateSubnet1AID:
+        default: Subnet for Storage Gateway
+      CloudFormationBucketName:
+        default: CloudFormation S3 Bucket Name
+      CloudFormationKeyPrefix:
+        default: CloudFormation S3 Key Prefix
+Parameters:
+  DomainAdminUser:
+    AllowedPattern: '[a-zA-Z0-9]*'
+    Default: Admin
+    Description: >-
+      User name for the account that will be added as Domain Administrator.
+      This is separate from the default "Administrator" account
+    MaxLength: 25
+    MinLength: 5
+    Type: String
+  DomainAdminPassword:
+    AllowedPattern: (?=^.{6,255}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*
+    Description: >-
+      Password for the domain admin user. Must be at least 8 characters
+      containing letters, numbers and symbols
+    MaxLength: 32
+    MinLength: 8
+    NoEcho: 'true'
+    Type: String
+  DomainDNSName:
+    AllowedPattern: '[a-zA-Z0-9]+\..+'
+    Default: example.com
+    Description: Fully qualified domain name (FQDN) of the forest root domain e.g. example.com
+    MaxLength: 255
+    MinLength: 2
+    Type: String
+  DomainNetBIOSName:
+    AllowedPattern: '[a-zA-Z0-9]+'
+    Default: example
+    Description: >-
+      NetBIOS name of the domain (up to 15 characters) for users of earlier
+      versions of Windows e.g. EXAMPLE
+    MaxLength: 15
+    MinLength: 1
+    Type: String
+  EditHostAccessCIDR:
+    ConstraintDescription: EditHostAccessCIDR parameter must be in the form x.x.x.x/FIXME
+    Description: CIDR block to control access to the Edit Host.
+    Type: String
+  EditHostInstanceType:
+    Description: Amazon EC2 instance type for the video editing server
+    Type: String
+    Default: g4dn.4xlarge
+    AllowedValues:
+      - g4dn.xlarge
+      - g4dn.2xlarge
+      - g4dn.4xlarge
+      - g4dn.8xlarge
+      - g4dn.16xlarge
+      - g4dn.12xlarge
+  KeyPairName:
+    Description: >-
+      Public/private key pairs allow you to securely connect to your instance
+      after it launches
+    Type: AWS::EC2::KeyPair::KeyName
+  CloudFormationBucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: >-
+      CloudFormation assets bucket name can include numbers, lowercase letters, uppercase
+      letters, and hyphens (-). It cannot start or end with a hyphen (-).
+    Default: my-cfn-bucket
+    Description: >-
+      S3 bucket name for the CloudFormation assets. The bucket name
+      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-).
+    Type: String
+  CloudFormationKeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/]*$
+    ConstraintDescription: >-
+      CloudFormation assets key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), and forward slash (/).
+    Default: my-cfn-key/
+    Description: >-
+      S3 key prefix for the CloudFormation assets. The key prefix
+      can include numbers, lowercase letters, uppercase letters, hyphens (-), and
+      forward slash (/).
+    Type: String
+  AssetS3BucketName:
+    AllowedPattern: ^[0-9a-z]+([0-9a-z-]*[0-9a-z])*$
+    ConstraintDescription: >-
+      Storage Gateway file share bucket name can include numbers, lowercase
+      letters, and hyphens (-). It cannot start or end with a hyphen (-).
+    Default: my-assets-bucket
+    Description: >-
+      S3 bucket name for video assets. Storage Gateway bucket name
+      can include numbers, lowercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-).
+    Type: String
+  Project:
+    Description: Tag used for billing and resource groups
+    Type: String
+    Default: cloud-video-edit-sgw
+  sgwInstanceType:
+    AllowedValues:
+      - m5.xlarge
+    Default: m5.xlarge
+    Type: String
+  sgwVolumeType:
+    Description: 'Choose gp2 (general purpose), io1 (provisioned IOPS), or st1 (throughput optimized HDD)'
+    Default: gp2
+    Type: String
+    AllowedValues:
+      - gp2
+      - io1
+      - st1
+  sgwCacheSize:
+    Description: '(GiB), Minimum 150 GiB'
+    Default: 500
+    Type: Number
+    MinValue: 150
+  sgwProvisionedIOPS:
+    Description: 'Only applicable if volume type is io1, disk cache IOPS range of 100 to 16000'
+    Default: 1000
+    Type: Number
+    MinValue: 100
+    MaxValue: 16000
+  PublicSubnet1ID:
+    Description: Should be public for remote access
+    Type: String
+  PrivateSubnet1AID:
+    Description: Should be private for local access
+    Type: String
+  VPCID:
+    Description: ID of the VPC (e.g., vpc-0343606e)
+    Type: AWS::EC2::VPC::Id
+
+Resources:
+  HostSecGrpStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}templates/cloud-video-editing-host-security-group.yaml'
+      Parameters:
+        HostAccessCIDR: !Ref 'EditHostAccessCIDR'
+        VPCID: !Ref 'VPCID'
+  CloudVideoEditingStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}templates/cloud-video-editing-edit-host.yaml'
+      Parameters:
+        DomainAdminPassword: !Ref 'DomainAdminPassword'
+        DomainAdminUser: !Ref 'DomainAdminUser'
+        DomainDNSName: !Ref 'DomainDNSName'
+        DomainNetBIOSName: !Ref 'DomainNetBIOSName'
+        InstanceType: !Ref 'EditHostInstanceType'
+        KeyPairName: !Ref 'KeyPairName'
+        HostSubnetId: !Ref 'PublicSubnet1ID'
+        FSxNetworkFileShare: 'NONE'
+        SGWNetworkFileShare: !Sub '${StorageGatewayStack.Outputs.NetworkShare}'
+        CloudFormationBucketName: !Ref 'CloudFormationBucketName'
+        CloudFormationKeyPrefix: !Ref 'CloudFormationKeyPrefix'
+        ExistingHostSecurityGroupID: !GetAtt 'HostSecGrpStack.Outputs.EditInstanceSG'
+  StorageGatewayStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}templates/cloud-video-editing-sgw-wrapper.yaml'
+      Parameters:
+        VPCID: !Ref 'VPCID'
+        Project: !Ref Project
+        existingSubnet: !Ref 'PrivateSubnet1AID'
+        sgDomainMembers: !GetAtt 'HostSecGrpStack.Outputs.EditInstanceSG'
+        instanceType: !Ref sgwInstanceType
+        volumeType: !Ref sgwVolumeType
+        cacheSize: !Ref sgwCacheSize
+        provisionedIOPS: !Ref sgwProvisionedIOPS
+        DomainAdminUser: !Ref DomainAdminUser
+        DomainAdminPassword: !Ref DomainAdminPassword
+        DomainDNSName: !Ref DomainDNSName
+        CloudFormationBucketName: !Ref CloudFormationBucketName
+        CloudFormationKeyPrefix: !Ref CloudFormationKeyPrefix
+        LambdaFunctionS3Key: !Sub '${CloudFormationKeyPrefix}sgw/fgw-fileshare.zip'
+        Boto3LayerS3Key: !Sub '${CloudFormationKeyPrefix}sgw/boto3-layer.zip'
+        SharedAssetsBucket: !Ref AssetS3BucketName
+Outputs:
+  HostSecurityGroupID:
+    Value: !GetAtt 'HostSecGrpStack.Outputs.EditInstanceSG'
+    Description: Host Security Group ID - for controlling ingress into remote edit host
+  EditHostInstanceID:
+    Value: !GetAtt 'CloudVideoEditingStack.Outputs.InstanceId'
+    Description: InstanceId of the newly created EC2 instance
+  NetworkShare:
+    Value: !GetAtt 'StorageGatewayStack.Outputs.NetworkShare'
+    Description: Network Share Mapping

@@ -1,0 +1,326 @@
+Description: Create a windows host with a custom volume size, create a role and security
+  group as well.
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Amazon EC2 Configuration
+        Parameters:
+          - HostSubnetId
+          - ExistingHostSecurityGroupID
+          - KeyPairName
+          - FSxNetworkFileShare
+          - SGWNetworkFileShare
+      - Label:
+          default: Microsoft Active Directory Configuration
+        Parameters:
+          - DomainDNSName
+          - DomainNetBIOSName
+          - DomainAdminUser
+          - DomainAdminPassword
+      - Label:
+          default: CloudFormation Resource Location
+        Parameters:
+          - CloudFormationBucketName
+          - CloudFormationKeyPrefix
+    ParameterLabels:
+      DomainAdminUser:
+        default: Domain Admin User
+      DomainAdminPassword:
+        default: Domain Admin Password
+      DomainDNSName:
+        default: Domain DNS Name
+      DomainNetBIOSName:
+        default: Domain NetBIOS Name
+      HostSubnetId:
+        default: Subnet for edit host - should be public for remote access 
+      KeyPairName:
+        default: Key Pair Name
+      InstanceType:
+        default: Amazon EC2 instance type for the video editing server
+      ExistingHostSecurityGroupID:
+        default: Security Group ID for the video editing server (e.g., sg-7f16e910) 
+      FSxNetworkFileShare:
+        default: 'URI for FSx network file share'
+      SGWNetworkFileShare:
+        default: 'URI for Storage Gateway network file share'
+      CloudFormationBucketName:
+        default: CloudFormation S3 Bucket Name
+      CloudFormationKeyPrefix:
+        default: CloudFormation S3 Key Prefix
+Parameters:
+  DomainAdminPassword:
+    AllowedPattern: (?=^.{6,255}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*
+    Description: Password for the domain admin user. Must be at least 8 characters
+      containing letters, numbers and symbols
+    MaxLength: '32'
+    MinLength: '8'
+    NoEcho: 'true'
+    Type: String
+  DomainAdminUser:
+    AllowedPattern: '[a-zA-Z0-9]*'
+    Default: Admin
+    Description: User name for the account that will be added as Domain Administrator.
+      This is separate from the default "Administrator" account
+    MaxLength: '25'
+    MinLength: '5'
+    Type: String
+  DomainDNSName:
+    AllowedPattern: '[a-zA-Z0-9]+\..+'
+    Default: example.com
+    Description: Fully qualified domain name (FQDN) of the forest root domain e.g.
+      corp.example.com
+    MaxLength: '255'
+    MinLength: '2'
+    Type: String
+  DomainNetBIOSName:
+    AllowedPattern: '[a-zA-Z0-9]+'
+    Default: example
+    Description: NetBIOS name of the domain (upto 15 characters) for users of earlier
+      versions of Windows e.g. CORP
+    MaxLength: '15'
+    MinLength: '1'
+    Type: String
+  HostSubnetId:
+    Description: Subnet for edit host - should be public for remote access
+    Type: String
+  KeyPairName:
+    Type: String
+    Description: Keypair for the instance
+  InstanceType:
+    Type: String
+    Description: Amazon EC2 instance type for the video editing server
+    Default: g4dn.4xlarge
+  Windows2019AmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base'
+  ExistingHostSecurityGroupID:
+    Description: ID of the Host Security Group allowing remote ingres (e.g., sg-7f16e910)
+    Type: AWS::EC2::SecurityGroup::Id
+  FSxNetworkFileShare:
+    Description: 'URI for FSx network file share'
+    Type: String
+    Default: 'NONE'
+  SGWNetworkFileShare:
+    Description: 'URI for SGW network file share'
+    Type: String
+    Default: 'NONE'
+  CloudFormationBucketName:
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    ConstraintDescription: >-
+      CloudFormation assets bucket name can include numbers, lowercase letters, uppercase
+      letters, and hyphens (-). It cannot start or end with a hyphen (-)
+    Description: >-
+      S3 bucket name for the CloudFormation assets. The bucket name
+      can include numbers, lowercase letters, uppercase letters, and hyphens (-).
+      It cannot start or end with a hyphen (-).
+    Type: String
+  CloudFormationKeyPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/]*$
+    ConstraintDescription: >-
+      CloudFormation assets key prefix can include numbers, lowercase letters,
+      uppercase letters, hyphens (-), and forward slash (/).
+    Description: >-
+      S3 key prefix for the CloudFormation assets. The key prefix can include numbers,
+      lowercase letters, uppercase letters, hyphens (-), and forward slash (/).
+    Type: String
+Resources:
+  EditHostRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Policies:
+        - PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                  - s3:GetObject
+                Resource: !Sub 'arn:aws:s3:::${CloudFormationBucketName}/${CloudFormationKeyPrefix}*'
+                Effect: Allow
+              - Action:
+                  - s3:ListBucket
+                Resource: 'arn:aws:s3:::ec2-windows-nvidia-drivers'
+                Effect: Allow
+              - Action:
+                  - s3:GetObject
+                Resource: 'arn:aws:s3:::ec2-windows-nvidia-drivers/*'
+                Effect: Allow
+          PolicyName: aws-s3-policy
+      Path: /
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Effect: Allow
+        Version: '2012-10-17'
+  IAMInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref 'EditHostRole'
+  EditInstance:
+    Type: AWS::EC2::Instance
+    Metadata:
+      AWS::CloudFormation::Authentication:
+        S3AccessCreds:
+          type: S3
+          roleName: !Ref 'EditHostRole'
+          buckets:
+            - !Ref 'CloudFormationBucketName'
+      AWS::CloudFormation::Init:
+        configSets:
+          config:
+            - setup
+            - configInstance
+            - joinDomain
+            - finalize
+        setup:
+          services:
+            windows:
+              Audiosrv:
+                ensureRunning: 'true'
+                enabled: 'true'
+          files:
+            C:\cfn\scripts\Unzip-Archive.ps1:
+              source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Unzip-Archive.ps1'
+              authentication: S3AccessCreds
+            C:\cfn\modules\AWSQuickStart.zip:
+              source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}submodules/quickstart-microsoft-utilities/modules/AWSQuickStart.zip'
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Restart-Computer.ps1:
+              source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Restart-Computer.ps1'
+              authentication: S3AccessCreds
+            C:\cfn\scripts\Join-Domain.ps1:
+              source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}submodules/quickstart-microsoft-utilities/scripts/Join-Domain.ps1'
+              authentication: S3AccessCreds
+          commands:
+            a-set-execution-policy:
+              command: powershell.exe -Command "Set-ExecutionPolicy RemoteSigned -Force"
+              waitAfterCompletion: '0'
+            b-unpack-quickstart-module:
+              command: powershell.exe -Command C:\cfn\scripts\Unzip-Archive.ps1 -Source
+                C:\cfn\modules\AWSQuickStart.zip -Destination C:\Windows\system32\WindowsPowerShell\v1.0\Modules\
+              waitAfterCompletion: '0'
+            c-init-quickstart-module:
+              command: !Join
+                - ''
+                - - powershell.exe -Command "
+                  - New-AWSQuickStartResourceSignal -Stack '
+                  - !Ref 'AWS::StackName'
+                  - ''' -Resource ''EditInstance'' -Region '''
+                  - !Ref 'AWS::Region'
+                  - '''"'
+              waitAfterCompletion: '0'
+        configInstance:
+          files:
+            C:\cfn\scripts\install-packages.ps1:
+              source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}scripts/install-packages.ps1'
+              authentication: S3AccessCreds
+            C:\cfn\scripts\install-gpu-drivers.ps1:
+              source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}scripts/install-gpu-drivers.ps1'
+              authentication: S3AccessCreds
+            C:\cfn\scripts\install-teradici.ps1:
+              source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}scripts/install-teradici.ps1'
+              authentication: S3AccessCreds
+            C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\automount.bat:
+              content: !Sub |
+                    @echo OFF
+
+                    if NOT "%username%" == "Administrator" (
+                      if NOT "${SGWNetworkFileShare}" == "NONE" (
+                        net use S: ${SGWNetworkFileShare}
+                      )
+                      if NOT "${FSxNetworkFileShare}" == "NONE" (
+                        net use F: ${FSxNetworkFileShare}
+                      )
+                    ) else (
+                      echo Administrator Login - No network mounts
+                    ) 
+          commands:
+            '01-install-packages':
+              command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\install-packages.ps1 -Verbose'
+              waitAfterCompletion: '0'
+            '05-install-gpu-drivers':
+              command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\install-gpu-drivers.ps1 -Verbose'
+              waitAfterCompletion: '0'
+            '10-reboot':
+              command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\Restart-Computer.ps1'
+              waitAfterCompletion: forever
+            '15-install-teradici':
+              command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\install-teradici.ps1 -Verbose'
+              waitAfterCompletion: '0'
+        joinDomain:
+          commands:
+            join-domain:
+              command: !Join
+                - ''
+                - - powershell.exe  -ExecutionPolicy Unrestricted C:\cfn\scripts\Join-Domain.ps1
+                  - ' -DomainName "'
+                  - !Ref 'DomainDNSName'
+                  - '" -UserName "'
+                  - !Ref 'DomainNetBIOSName'
+                  - '\'
+                  - !Ref 'DomainAdminUser'
+                  - '" -Password "'
+                  - !Ref 'DomainAdminPassword'
+                  - '"'
+              waitAfterCompletion: forever
+        finalize:
+          commands:
+            1-signal-success:
+              command: powershell.exe -Command "Write-AWSQuickStartStatus"
+              waitAfterCompletion: '0'
+    Properties:
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 100
+      InstanceType: !Ref 'InstanceType'
+      IamInstanceProfile: !Ref 'IAMInstanceProfile'
+      ImageId: !Ref Windows2019AmiId
+      Tags:
+        - Key: Name
+          Value: win-host
+      NetworkInterfaces:
+        - GroupSet:
+            - !Ref 'ExistingHostSecurityGroupID'
+          DeviceIndex: '0'
+          SubnetId: !Ref HostSubnetId
+      KeyName: !Ref 'KeyPairName'
+      UserData: !Base64
+        Fn::Join:
+          - ''
+          - - "<script>\n"
+            - 'cfn-init.exe --configsets config -v --stack '
+            - !Ref 'AWS::StackName'
+            - ' --resource EditInstance'
+            - ' --region '
+            - !Ref 'AWS::Region'
+            - "\n"
+            - "</script>\n"
+    CreationPolicy:
+      ResourceSignal:
+        Count: 1
+        Timeout: PT15M
+  IPAddress:
+    Type: AWS::EC2::EIP
+  IPAssoc:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      InstanceId: !Ref 'EditInstance'
+      EIP: !Ref 'IPAddress'
+Outputs:
+  EditInstanceSG:
+    Value: !Ref 'ExistingHostSecurityGroupID'
+    Description: The SG for the Edit Instance
+    Export:
+      Name: !Sub '${AWS::StackName}-edit-instance-sg'
+  InstanceId:
+    Description: InstanceId of the newly created EC2 instance
+    Value: !Ref 'EditInstance'
+  InstanceIPAddress:
+    Description: IP address of the newly created EC2 instance
+    Value: !Ref 'IPAddress'      

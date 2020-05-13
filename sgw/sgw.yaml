@@ -1,0 +1,387 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Create Storage Gateway Server and join domain
+    
+Parameters:
+  VPCID:
+    Description: VPC ID for Storage Gateway
+    Type: AWS::EC2::VPC::Id
+  existingSubnet:
+    Description: >-
+      Subnet to deploy Storage Gateway (prefer private subnet 
+      in AZ with EC2 instances)
+    Type: 'AWS::EC2::Subnet::Id'
+  sgDomainMembers:
+    Description: 'Security group ID of domain members (EC2 instances) with access to this Storage Gateway'
+    Type: 'AWS::EC2::SecurityGroup::Id'
+  instanceType:
+    AllowedValues:
+      - m5.xlarge
+    Default: m5.xlarge
+    Type: String
+  FileGatewayAmiId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/storagegateway/ami/FILE_S3/latest'
+  volumeType:
+    Description: 'Choose gp2 (general purpose), io1 (provisioned IOPS), or st1 (throughput optimized HDD)'
+    Default: gp2
+    Type: String
+    AllowedValues:
+      - gp2
+      - io1
+      - st1
+  cacheSize:
+    Description: '(GiB), Minimum 150 GiB'
+    Default: 150
+    Type: Number
+    MinValue: 150
+  provisionedIOPS:
+    Description: 'Disk cache IOPS range of 100 to 16000'
+    Default: 1000
+    Type: Number
+    MinValue: 100
+    MaxValue: 16000
+  DomainDNSName:
+    Description: 'Fully qualified domain name'
+    Type: String
+    Default: example.com
+  DomainAdminUser:
+    AllowedPattern: '[a-zA-Z0-9]*'
+    Default: Admin
+    Description: User name for the account that will be added as Domain Administrator.
+      This is separate from the default "Administrator" account
+    MaxLength: '25'
+    MinLength: '5'
+    Type: String
+  DomainAdminPassword:
+    AllowedPattern: >-
+      (?=^.{6,255}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*
+    Description: >-
+      Password for the domain admin user. Must be at least 8 characters
+      containing letters, numbers and symbols
+    MaxLength: 32
+    MinLength: 8
+    NoEcho: 'true'
+    Type: String
+  Project:
+    Description: 'Tag used for billing and resource groups'
+    Type: String
+    Default: POC
+
+Conditions:
+  UseProvisionedIOPS: !Equals
+    - !Ref volumeType
+    - 'io1'
+
+Resources:
+  fgwRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 
+                - ec2.amazonaws.com
+                - storagegateway.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Tags:
+        - Key: Project
+          Value: !Ref Project          
+  fgwInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref fgwRole
+  fgwRolePolicy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: 'storagegateway:*'
+            Resource: '*'
+          - Effect: Allow
+            Action: 'ec2:DescribeNetworkInterfaces'
+            Resource: '*'
+          - Effect: Allow
+            Action: 'ec2:CreateTags'
+            Resource: '*'
+          - Effect: Allow
+            Action:
+              - 'logs:CreateLogGroup'
+              - 'logs:CreateLogStream'
+              - 'logs:PutLogEvents'
+              - 'logs:DescribeLogStreams'
+            Resource:
+              - 'arn:aws:logs:*:*:*'            
+      PolicyName: fgwRolePolicy
+      Roles:
+        - !Ref fgwRole
+  CloudFormationLogs:
+    Type: 'AWS::Logs::LogGroup'
+    Properties:
+      RetentionInDays: 7
+  ec2FGWSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref VPCID
+      GroupDescription: File Gateway Access All Ports
+      SecurityGroupIngress:
+        - FromPort: 0
+          IpProtocol: tcp
+          SourceSecurityGroupId: !Ref sgDomainMembers
+          ToPort: 65535
+        - FromPort: 0
+          IpProtocol: udp
+          SourceSecurityGroupId: !Ref sgDomainMembers
+          ToPort: 65535
+        - FromPort: -1
+          IpProtocol: icmp
+          SourceSecurityGroupId: !Ref sgDomainMembers
+          ToPort: -1
+      Tags:
+        - Key: Project
+          Value: !Ref Project          
+  fgwInstance:
+    Type: 'AWS::EC2::Instance'
+    Metadata:
+      'AWS::CloudFormation::Init':
+        configSets:
+          install_all:
+            - install_logs
+            - setup_sgw
+        install_logs:
+          packages:
+            yum:
+              awslogs: []
+          files:
+            /etc/awslogs/awslogs.conf:
+              content: !Join 
+                - ''
+                - - |
+                    [general]
+                    state_file = /var/awslogs/state/agent-state
+                    [/var/log/cloud-init.log]
+                    file = /var/log/cloud-init.log
+                  - !Sub 'log_group_name = ${CloudFormationLogs}'
+                  - |+
+
+                  - |
+                    log_stream_name = {instance_id}/cloud-init.log
+                    datetime_format = 
+                  - |
+                    [/var/log/cloud-init-output.log]
+                  - |
+                    file = /var/log/cloud-init-output.log
+                  - !Sub 'log_group_name = ${CloudFormationLogs}'
+                  - |+
+
+                  - |
+                    log_stream_name = {instance_id}/cloud-init-output.log
+                    datetime_format = 
+                  - |
+                    [/var/log/cfn-init.log]
+                  - |
+                    file = /var/log/cfn-init.log
+                  - !Sub 'log_group_name = ${CloudFormationLogs}'
+                  - |+
+
+                  - |
+                    log_stream_name = {instance_id}/cfn-init.log
+                    datetime_format = 
+                  - |
+                    [/var/log/cfn-hup.log]
+                  - |
+                    file = /var/log/cfn-hup.log
+                  - !Sub 'log_group_name = ${CloudFormationLogs}'
+                  - |+
+
+                  - |
+                    log_stream_name = {instance_id}/cfn-hup.log
+                    datetime_format = 
+                  - |
+                    [/var/log/cfn-wire.log]
+                  - |
+                    file = /var/log/cfn-wire.log
+                  - !Sub 'log_group_name = ${CloudFormationLogs}'
+                  - |+
+
+                  - |
+                    log_stream_name = {instance_id}/cfn-wire.log
+                    datetime_format = 
+                  - |+
+              mode: '000444'
+              owner: root
+              group: root
+            /etc/awslogs/awscli.conf:
+              content: !Join 
+                - ''
+                - - |
+                    [plugins]
+                    cwlogs = cwlogs
+                    [default]
+                  - !Sub 'region = ${AWS::Region}'
+                  - |+
+              mode: '000444'
+              owner: root
+              group: root
+          commands:
+            01_create_state_directory:
+              command: mkdir -p /var/awslogs/state
+          services:
+            sysvinit:
+              awslogs:
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                  - /etc/awslogs/awslogs.conf
+        setup_sgw:
+          files:
+            /etc/cfn/activate_sgw.sh:
+              content: !Join
+                - ''
+                - - |
+                    #!/bin/bash
+                  - !Sub |
+                    AWS_REGION="${AWS::Region}"
+                  - !Sub |
+                    DOMAIN_USER="${DomainAdminUser}"
+                  - !Sub |
+                    DOMAIN_PASSWORD="${DomainAdminPassword}"
+                  - !Sub |
+                    DOMAIN_DNS_NAME="${DomainDNSName}"
+                  - !Sub |
+                    STACK_NAME="${AWS::StackName}"
+                  - !Sub |
+                    PROJECT="${Project}"
+                  - |  
+                    echo "/etc/awslogs/awslogs.conf"
+                    cat /etc/awslogs/awslogs.conf
+                    echo "/etc/awslogs/awscli.conf"
+                    cat /etc/awslogs/awscli.conf
+                    echo
+                    echo ${AWS_REGION}
+                    echo ${DOMAIN_USER}
+                    echo ${DOMAIN_PASSWORD}
+                    echo ${DOMAIN_DNS_NAME}
+                    echo ${STACK_NAME}
+                    echo clear log > /var/log/cloud-init-output.log
+                    pip install --upgrade awscli &> /tmp/pip
+                    /usr/local/bin/aws configure set default.region ${AWS_REGION}
+                    instance=$(curl "http://169.254.169.254/latest/meta-data/instance-id")
+                    echo ${instance}
+                    ip=$(curl "http://169.254.169.254/latest/meta-data/local-ipv4")
+                    echo ${ip}
+                    name=${STACK_NAME}-File-Gateway
+                    gwMode=FILE_S3
+                    complete=0
+                    count=1
+                    while [ $complete != 3 -a $count != 10 ]; do
+                      if [ $count -ne 1 ]; then
+                        sleep 15
+                      fi
+                      if [ $complete -eq 0 ]; then
+                        # Get StorageGatewa activation Code
+                        response=$(echo -e "GET /?gatewayType=${gwMode}&activationRegion=${AWS_REGION} HTTP/1.1\r\n" | nc localhost 8080 | grep Location)
+                        code=$(echo ${response##*=} | tr -d "\n" | tr -d "\r")
+                        echo "CODE: ${code}"
+                        if [[ $code != "" ]]; then
+                          # Activate StorageGateway
+                          echo "ACTIVATE-SGW: /usr/local/bin/aws storagegateway activate-gateway --activation-key ${code} --gateway-name ${name} --gateway-timezone GMT --gateway-type ${gwMode} --gateway-region ${AWS_REGION} --region ${AWS_REGION} --tags Key=Project,Value=${PROJECT} --output text"
+                          gatewayarn=$(/usr/local/bin/aws storagegateway activate-gateway --activation-key ${code} --gateway-name ${name} --gateway-timezone GMT --gateway-type ${gwMode} --gateway-region ${AWS_REGION} --region ${AWS_REGION} --tags Key=Project,Value=${PROJECT} --output text)
+                          if [ $? -eq 0 ]; then complete=1; echo ${gatewayarn}; sleep 15; fi
+                        fi
+                      fi
+                      if [ $complete -eq 1 ]; then
+                        disks=$(/usr/local/bin/aws storagegateway list-local-disks --gateway-arn ${gatewayarn} --region ${AWS_REGION} | grep DiskId)
+                        disks=$(echo "${disks##*:}" | sed 's/[",]//g')
+                        diskarray=($disks)
+                        echo "DISK: ${diskarray[0]}"
+                        if [[ ${diskarray[0]} != "" ]]; then
+                          # Add Disk Cache
+                          /usr/local/bin/aws storagegateway add-cache --gateway-arn ${gatewayarn} --disk-ids --region ${AWS_REGION} ${diskarray[0]}
+                          if [ $? -eq 0 ]; then complete=2; fi
+                        fi
+                      fi
+                      if [ $complete -eq 2 ]; then
+                        # Join Domain
+                        /usr/local/bin/aws storagegateway join-domain --gateway-arn ${gatewayarn} --domain-name ${DOMAIN_DNS_NAME} --user-name ${DOMAIN_USER} --password ${DOMAIN_PASSWORD}
+                        if [ $? -eq 0 ]; then complete=3; fi
+                      fi
+                      count=$((count+1))
+                    done
+                    if [ $complete -eq 3 ]; then
+                      /usr/local/bin/aws ec2 create-tags --resources ${instance} --tags "Key=Name,Value=${STACK_NAME} - File Gateway Activated"
+                    else
+                      /usr/local/bin/aws ec2 create-tags --resources ${instance} --tags "Key=Name,Value=${STACK_NAME} - File Gateway FAILED ACTIVATION"
+                      exit 1
+                    fi
+                    echo "Done activate_sgw"
+                  - |+
+              mode: '000744'
+              owner: root
+              group: root
+          commands:
+            01_activate_sgw:
+              command: /etc/cfn/activate_sgw.sh
+    Properties:
+      InstanceType: !Ref instanceType
+      IamInstanceProfile: !Ref fgwInstanceProfile
+      InstanceInitiatedShutdownBehavior: terminate
+      BlockDeviceMappings: 
+      - DeviceName: "/dev/sdc"
+        Ebs: 
+          VolumeType: !Ref volumeType
+          DeleteOnTermination: true
+          VolumeSize: !Ref cacheSize
+          Iops: !If [UseProvisionedIOPS, !Ref provisionedIOPS, !Ref 'AWS::NoValue']
+      ImageId: !Ref FileGatewayAmiId
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: '0'
+          GroupSet:
+            - !Ref ec2FGWSecurityGroup
+          SubnetId: !Ref existingSubnet
+      UserData: !Base64
+        'Fn::Join':
+          - ''
+          - - |
+              #!/bin/bash -xe
+            - !Sub |
+              AWS_REGION="${AWS::Region}"
+              STACK_NAME="${AWS::StackName}"
+            - |  
+              yum update -y aws-cfn-bootstrap
+              /opt/aws/bin/cfn-init -v --stack ${STACK_NAME} --resource fgwInstance --configsets install_all --region ${AWS_REGION}
+              /opt/aws/bin/cfn-signal -e $? --stack ${STACK_NAME} --resource fgwInstance --region ${AWS_REGION}
+      Tags:
+        - Key: Name
+          Value: !Join 
+            - '-'
+            - - !Ref 'AWS::StackName'
+              - 'File Gateway Server'
+        - Key: Project
+          Value: !Ref Project
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+Outputs:
+  StorageGatewayRole:
+    Description: 'Storage Gateway IAM Role name'
+    Value: !Ref fgwRole
+  StorageGatewayRoleArn:
+    Description: 'Storage Gateway IAM Role ARN'
+    Value: !GetAtt 
+      - fgwRole
+      - Arn    
+  StorageGatewayName:
+    Description: 'Storage Gateway Name'
+    Value: !Join 
+        - '-'
+        - - !Ref AWS::StackName
+          - "File-Gateway"

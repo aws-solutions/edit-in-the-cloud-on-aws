@@ -1,0 +1,58 @@
+[
+    {
+        "ParameterKey": "AvailabilityZones",
+        "ParameterValue": "us-east-1a, us-east-1b"
+    },
+    {
+        "ParameterKey": "AZDeploymentMode",
+        "ParameterValue": "SINGLE_AZ_2"
+    },
+    {
+        "ParameterKey": "DomainAdminUser",
+        "ParameterValue": "Admin"
+    },
+    {
+        "ParameterKey": "DomainAdminPassword",
+        "ParameterValue": "CHANGE-ME!"
+    },
+    {
+        "ParameterKey": "DomainDNSName",
+        "ParameterValue": "example.com"
+    },
+    {
+        "ParameterKey": "DomainNetBIOSName",
+        "ParameterValue": "example"
+    },
+    {
+        "ParameterKey": "EditHostAccessCIDR",
+        "ParameterValue": "1.1.1.1/32"
+    },
+    {
+        "ParameterKey": "EditHostInstanceType",
+        "ParameterValue": "g4dn.4xlarge"
+    },
+    {
+        "ParameterKey": "FileSystemSize",
+        "ParameterValue": "1024"
+    },
+    {
+        "ParameterKey": "FSxThroughput",
+        "ParameterValue": "16"
+    },
+    {
+        "ParameterKey": "KeyPairName",
+        "ParameterValue": "my-key-pair"
+    },
+    {
+        "ParameterKey": "Project",
+        "ParameterValue": "cloud-video-edit-fsx"
+    },
+    {
+        "ParameterKey": "CloudFormationBucketName",
+        "ParameterValue": "my-cfn-bucket"
+    },
+    {
+        "ParameterKey": "CloudFormationKeyPrefix",
+        "ParameterValue": "my-cfn-key/"
+    }
+]

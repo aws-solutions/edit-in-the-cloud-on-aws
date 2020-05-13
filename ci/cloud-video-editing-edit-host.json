@@ -1,0 +1,50 @@
+[
+    {
+        "ParameterKey": "DomainDNSName",
+        "ParameterValue": "example.com"
+    },
+    {
+        "ParameterKey": "DomainNetBIOSName",
+        "ParameterValue": "example"
+    },
+    {
+        "ParameterKey": "InstanceType",
+        "ParameterValue": "g4dn.4xlarge"
+    },
+    {
+        "ParameterKey": "HostSubnetId",
+        "ParameterValue": "subnet-<Subnet ID>"
+    },
+    {
+        "ParameterKey": "KeyPairName",
+        "ParameterValue": "my-key-pair"
+    },
+    {
+        "ParameterKey": "FSxNetworkFileShare",
+        "ParameterValue": "NONE"
+    },
+    {
+        "ParameterKey": "SGWNetworkFileShare",
+        "ParameterValue": "NONE"
+    },
+    {
+        "ParameterKey": "CloudFormationBucketName",
+        "ParameterValue": "my-cfn-launch-bucket"
+    },
+    {
+        "ParameterKey": "CloudFormationKeyPrefix",
+        "ParameterValue": "my-cfn-key/"
+    },
+    {
+        "ParameterKey": "DomainAdminUser",
+        "ParameterValue": "Admin"
+    },
+    {
+        "ParameterKey": "DomainAdminPassword",
+        "ParameterValue": "CHANGE-ME!"
+    },
+    {
+        "ParameterKey": "ExistingHostSecurityGroupID",
+        "ParameterValue": "sg-<Security group ID>"
+    }
+]

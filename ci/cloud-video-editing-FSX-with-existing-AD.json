@@ -1,0 +1,78 @@
+[
+    {
+        "ParameterKey": "Project",
+        "ParameterValue": "cloud-video-edit-fsx-existing-env"
+    },
+    {
+        "ParameterKey": "DomainDNSName",
+        "ParameterValue": "example.com"
+    },
+    {
+        "ParameterKey": "DomainNetBIOSName",
+        "ParameterValue": "example"
+    },
+    {
+        "ParameterKey": "DomainAdminUser",
+        "ParameterValue": "Admin"
+    },
+    {
+        "ParameterKey": "DomainAdminPassword",
+        "ParameterValue": "CHANGE-ME!"
+    },
+    {
+        "ParameterKey": "EditHostAccessCIDR",
+        "ParameterValue": "1.1.1.1/32"
+    },
+    {
+        "ParameterKey": "EditHostInstanceType",
+        "ParameterValue": "g4dn.4xlarge"
+    },
+    {
+        "ParameterKey": "KeyPairName",
+        "ParameterValue": "my-key-pair"
+    },
+    {
+        "ParameterKey": "CloudFormationBucketName",
+        "ParameterValue": "my-cfn-launch-bucket"
+    },
+    {
+        "ParameterKey": "CloudFormationKeyPrefix",
+        "ParameterValue": "my-cfn-key/"
+    },
+    {
+        "ParameterKey": "DomainMemberSGID",
+        "ParameterValue": "sg-<Security group ID>"
+    },
+    {
+        "ParameterKey": "PublicSubnet1ID",
+        "ParameterValue": "subnet-<Subnet ID>"
+    },
+    {
+        "ParameterKey": "PrivateSubnet1AID",
+        "ParameterValue": "subnet-<Subnet ID>"
+    },
+    {
+        "ParameterKey": "PrivateSubnet2AID",
+        "ParameterValue": "subnet-<Subnet ID>"
+    },
+    {
+        "ParameterKey": "VPCID",
+        "ParameterValue": "vpc-<VPC ID>"
+    },
+    {
+        "ParameterKey": "DirectoryId",
+        "ParameterValue": "d-<Directory ID>"
+    },
+    {
+        "ParameterKey": "FileSystemSize",
+        "ParameterValue": "1024"
+    },
+    {
+        "ParameterKey": "FSxThroughput",
+        "ParameterValue": "16"
+    },
+    {
+        "ParameterKey": "AZDeploymentMode",
+        "ParameterValue": "SINGLE_AZ_2"
+    }
+]
