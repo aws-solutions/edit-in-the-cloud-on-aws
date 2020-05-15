@@ -1,6 +1,8 @@
 # AWS Cloud Video Editing
 
-This repository contains CloudFormation templates and automation to manage deployment of a Cloud Editing environment.
+This repository contains CloudFormation templates and automation to manage deployment of a Cloud Editing environment. More details on architectural considerations and best practices can be found at this [AWS Media blog post](https://aws.amazon.com/blogs/media/running-adobe-creative-cloud-suite-on-aws/) .
+
+**Caveat** Explore, build and deploy this as a _sandbox_ operating environment only. It is not reccomended to run this in production without extensive testing.
 
 ## Architecture
 ![Architecture](images/cloud-video-editing-architecture.jpg)
@@ -16,7 +18,10 @@ This repository contains CloudFormation templates and automation to manage deplo
 
 ### AWS CLI Profile
 The scripts used below expects a profile.
-You can create a profile by following [this guide](TBD)
+You can create a profile by following [this guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-profiles.html)
+
+### Key Pair
+[Create a Key Pair](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html#having-ec2-create-your-key-pair) in the region you plan on building this cloud editing environment.
 
 ## Usage
 
