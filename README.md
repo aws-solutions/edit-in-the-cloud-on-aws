@@ -51,6 +51,11 @@ This is essentially to build and deploy a self-contained Cloud Editing environme
 
 A more detailed guide to using the different CloudFormation templates to implement different use cases is available using the [Cookbook](Cookbook.md) .
 
+## Contributors
+- Ben Weigman
+- Mark Stephens
+- Sachin Holla (sachinh@)
+
 ## License
 
 This library is licensed under the MIT-0 License. See the [LICENSE file](LICENSE.md) .
