@@ -55,6 +55,7 @@ A more detailed guide to using the different CloudFormation templates to impleme
 - Ben Weigman
 - Mark Stephens
 - Sachin Holla (sachinh@)
+- Matt Herson (mhersonaws@)
 
 ## License
 
