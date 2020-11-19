@@ -3,7 +3,7 @@ Param(
     [Parameter(Mandatory=$false)]
     [string]$GpuDriverBucket = 'ec2-windows-nvidia-drivers',
     [Parameter(Mandatory=$false)]
-    [string]$GpuDriverBucketPrefix = '/g4/latest',
+    [string]$GpuDriverBucketPrefix = '/latest',
     [Parameter(Mandatory=$false)]
     [string]$DownloadDir = 'c:\cfn\downloads',
     [Parameter(Mandatory=$false)]
