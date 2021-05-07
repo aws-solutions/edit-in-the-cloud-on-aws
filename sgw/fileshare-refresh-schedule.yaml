@@ -71,7 +71,7 @@ Resources:
           FILE_SHARE: !Ref FileGatewayShare
       Handler: index.handler
       Role: !GetAtt LambdaIAMRole.Arn
-      Runtime: nodejs10.x
+      Runtime: nodejs14.x
       Timeout: 5
       Tags: 
         -
