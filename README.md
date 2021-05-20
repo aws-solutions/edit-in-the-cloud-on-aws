@@ -1,6 +1,6 @@
 # AWS Edit in the Cloud
 
-This step-by-step guide details how to deploy an edit host, storage, and connectivity on AWS. This template allows users to build additional features, and add functionality, into an Amazon Elastic Compute Cloud (Amazon EC2) deployment. By incorporating Amazon FSx for Windows File Server, you can utilize a central repository for your media assets while providing an easy connection to your EC2 instance. The template also includes AWS Directory Services in conjunction with Teradici for Federated Login to allow for seamless editorial experience. Once you are logged into AWS management console, use this AWS CloudFormation deployment template.
+This step-by-step guide details how to deploy an edit host, storage, and connectivity on AWS. This template allows users to build additional features, and add functionality, into an Amazon Elastic Compute Cloud (Amazon EC2) deployment. By incorporating Amazon FSx for Windows File Server, you can utilize a central repository for your media assets while providing an easy connection to your EC2 instance. The template also includes AWS Directory Services in conjunction with Teradici for federated login to allow for seamless editorial experience. Once you are logged into AWS Management Console, use this AWS CloudFormation deployment template.
 
 ## Building distributable for customization
 
