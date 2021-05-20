@@ -39,7 +39,7 @@ def create(event, context):
     """
     Get FSx DNS Name
     """
-    conf = Config(user_agent_extra="AwsSolution/edit-in-the-cloud/v2.0.0")
+    conf = Config(user_agent_extra="AwsSolution/aws-edit-in-the-cloud/v1.0.0")
     fsx_windows = boto3.client('fsx', config=conf)
 
     # Parameters, as a list

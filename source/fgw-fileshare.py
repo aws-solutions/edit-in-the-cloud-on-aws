@@ -15,7 +15,7 @@ from crhelper import CfnResource
 import logging
 
 # Get boto config. 
-# config = config.Config({"user_agent_extra": "AwsSolution/edit-in-the-cloud/v2.0.0"})
+# config = config.Config({"user_agent_extra": "AwsSolution/aws-edit-in-the-cloud/v1.0.0"})
 
 logger = logging.getLogger(__name__)
 # Initialise the helper, all inputs are optional, this example shows the defaults
