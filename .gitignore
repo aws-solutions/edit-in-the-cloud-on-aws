@@ -1,4 +1,28 @@
-sgw/boto3-layer.zip
-sgw/.DS_Store
-.DS_Store
+# This project
+boto3-layer.zip
 custom.mk
+
+# Build/Deployment 
+/build
+deployment/build-dist/
+deployment/global-s3-assets/
+deployment/regional-s3-assets/
+deployment/build-dist/
+deployment/open-source/
+source/package
+source/fgw-fileshare.zip
+source/fsx-dns-name.zip
+source/AWSQuickStart.zip
+
+### OSX ###
+*.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+.envrc
+.vscode
+cfn-check.sh
+cfn-create.sh
+aws-edit-in-the-cloud-master-with-FSX.json
+cfn_nag_suppressions.log

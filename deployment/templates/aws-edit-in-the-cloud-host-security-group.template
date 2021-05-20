@@ -1,0 +1,59 @@
+Description: Create a security group to allow for accessing the remote hosts.
+Parameters:
+  HostAccessCIDR:
+    Default: 1.1.1.1/32
+    Description: CIDR Block for the edit Host to control authorized access.
+    Type: String
+    AllowedPattern: '^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))$'
+  VPCID:
+    Description: ID of the VPC (e.g., vpc-0343606e)
+    Type: AWS::EC2::VPC::Id
+Resources:
+  HostSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Metadata:
+      cfn_nag:
+        rules_to_suppress:
+          - id: W5
+            reason: "Using open egress so that EC2 has full internet access"
+          - id: W29
+            reason: "Using open egress so that EC2 has full internet access"
+    Properties:
+      GroupDescription: ssh and rdp
+      SecurityGroupEgress:
+        - IpProtocol: udp
+          Description: "All UDP Traffic"
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          Description: "All TCP Traffic"
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          Description: "Microsoft Remote Desktop"
+          FromPort: 3389
+          ToPort: 3389
+          CidrIp: !Ref 'HostAccessCIDR'
+        - IpProtocol: tcp
+          Description: "HTTPS"
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref 'HostAccessCIDR'
+        - IpProtocol: udp
+          Description: "Teradici PCoIP"
+          FromPort: 4172
+          ToPort: 4172
+          CidrIp: !Ref 'HostAccessCIDR'
+        - IpProtocol: tcp
+          Description: "Teradici PCoIP"
+          FromPort: 4172
+          ToPort: 4172
+          CidrIp: !Ref 'HostAccessCIDR'
+      VpcId: !Ref 'VPCID'
+Outputs:
+  EditInstanceSG:
+    Value: !Ref 'HostSecurityGroup'
+    Description: The SG for the Edit Instance
