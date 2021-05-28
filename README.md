@@ -8,7 +8,7 @@ This step-by-step guide details how to deploy an edit host, storage, and connect
 
 ```sh
 export SOLUTION_NAME=aws-edit-in-the-cloud
-export VERSION=v1.0.0
+export VERSION=v1.0.1
 export BUCKET_PREFIX=my_s3_bucket # change this variable to the basename of your S3 bucket
 export REGION_TO_TEST=us-west-2 # change this variable to the region of your S3 bucket
 export TEMPLATE_OUTPUT_BUCKET=$BUCKET_PREFIX

@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 #
 AWSTemplateFormatVersion: '2010-09-09'
-Description: (SO153) - __SOLUTION_NAME__ __VERSION__
+Description: (SO0153) - __SOLUTION_NAME__ __VERSION__
 
 # Solution Builder Specific Mappings
 Mappings:
