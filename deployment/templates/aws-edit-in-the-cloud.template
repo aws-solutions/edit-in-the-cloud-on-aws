@@ -47,6 +47,7 @@ Metadata:
           - DomainNetBIOSName
           - DomainAdminUser
           - DomainAdminPassword
+          - ADEdition
       - Label:
           default: FSX Configuration
         Parameters:
@@ -58,6 +59,8 @@ Metadata:
         default: Availability Zones
       DomainAdminUser:
         default: Domain Admin User
+      ADEdition:
+        default: Stanard or Enterprize
       DomainAdminPassword:
         default: Domain Admin Password
       DomainDNSName:
@@ -92,6 +95,11 @@ Parameters:
     Description: >-
       Select 2 Availability Zones to use for the VPC subnets.
     Type: List<AWS::EC2::AvailabilityZone::Name>
+  ADEdition:
+    Default: Standard
+    Description: >-
+      Active Directory edition to deploy.
+    Type: String
   DomainAdminUser:
     AllowedPattern: '[a-zA-Z0-9]*'
     Default: Admin
@@ -252,6 +260,7 @@ Resources:
     Properties:
       TemplateURL: https://aws-quickstart.s3.amazonaws.com/quickstart-microsoft-activedirectory/templates/ad-3.template
       Parameters:
+        ADEdition: Standard
         DomainAdminPassword: !Ref 'DomainAdminPassword'
         DomainDNSName: !Ref 'DomainDNSName'
         DomainNetBIOSName: !Ref 'DomainNetBIOSName'
