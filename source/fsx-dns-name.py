@@ -9,12 +9,17 @@ specific language governing permissions and limitations
 under the License.
 """
 
+import os
 import json
 import boto3
 from botocore.config import Config
 from crhelper import CfnResource
 import logging
 
+# Init boto config
+
+BOTO_CONFIG = json.loads(os.environ['botoConfig'])
+CONFIG = Config(**BOTO_CONFIG)
 
 logger = logging.getLogger(__name__)
 # Initialise the helper, all inputs are optional, this example shows the defaults
@@ -39,8 +44,7 @@ def create(event, context):
     """
     Get FSx DNS Name
     """
-    conf = Config(user_agent_extra="AwsSolution/aws-edit-in-the-cloud/v1.0.1")
-    fsx_windows = boto3.client('fsx', config=conf)
+    fsx_windows = boto3.client('fsx', config=CONFIG)
 
     # Parameters, as a list
     file_system_id = [event['ResourceProperties']['FileSystemId']]

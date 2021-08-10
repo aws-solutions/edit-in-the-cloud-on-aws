@@ -138,13 +138,6 @@ echo "cp boto3-layer.zip $build_dist_dir/boto3-layer.zip"
 cp boto3-layer.zip $build_dist_dir/boto3-layer.zip
 
 cd $source_dir/
-## fgw-fileshare
-echo "rm fgw-fileshare.zip"
-rm fgw-fileshare.zip
-echo "zip -r9q 'fgw-fileshare.zip' fgw-fileshare.py"
-zip -r9q 'fgw-fileshare.zip' fgw-fileshare.py
-echo "cp fgw-fileshare.zip $build_dist_dir/fgw-fileshare.zip"
-cp fgw-fileshare.zip $build_dist_dir/fgw-fileshare.zip
 
 ## fsx-dns-name
 echo "rm fsx-dns-name.zip"

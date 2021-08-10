@@ -55,7 +55,11 @@ echo "https://s3.amazonaws.com/$TEMPLATE_OUTPUT_BUCKET/$SOLUTION_NAME/$VERSION/$
 
 ***
 
-Copyright 2019-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+This solution collects anonymous operational metrics to help AWS improve the
+quality of features of the solution. For more information, including how to disable
+this capability, please see the [implementation guide](https://docs.aws.amazon.com/solutions/latest/aws-edit-in-the-cloud/collection-of-operational-metrics.html)
+
+Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 
 Licensed under the Apache License Version 2.0 (the "License"). You may not use this file except in compliance with the License. A copy of the License is located at
 

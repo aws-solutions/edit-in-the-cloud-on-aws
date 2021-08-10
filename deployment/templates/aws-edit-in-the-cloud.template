@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License").
 # You may not use this file except in compliance with the License.
@@ -47,6 +47,7 @@ Metadata:
           - DomainNetBIOSName
           - DomainAdminUser
           - DomainAdminPassword
+          - ADEdition
       - Label:
           default: FSX Configuration
         Parameters:
@@ -58,6 +59,8 @@ Metadata:
         default: Availability Zones
       DomainAdminUser:
         default: Domain Admin User
+      ADEdition:
+        default: Standard or Enterprise
       DomainAdminPassword:
         default: Domain Admin Password
       DomainDNSName:
@@ -92,6 +95,11 @@ Parameters:
     Description: >-
       Select 2 Availability Zones to use for the VPC subnets.
     Type: List<AWS::EC2::AvailabilityZone::Name>
+  ADEdition:
+    Default: Standard
+    Description: >-
+      Active Directory edition to deploy.
+    Type: String
   DomainAdminUser:
     AllowedPattern: '[a-zA-Z0-9]*'
     Default: Admin
@@ -253,6 +261,7 @@ Resources:
       TemplateURL: https://aws-quickstart.s3.amazonaws.com/quickstart-microsoft-activedirectory/templates/ad-3.template
       Parameters:
         DomainAdminPassword: !Ref 'DomainAdminPassword'
+        ADEdition: Standard
         DomainDNSName: !Ref 'DomainDNSName'
         DomainNetBIOSName: !Ref 'DomainNetBIOSName'
         # PrivateSubnet1CIDR: !Ref 'PrivateSubnet1CIDR'
@@ -334,6 +343,7 @@ Resources:
             - KeyPrefix
           - aws-edit-in-the-cloud-fsx-dns-name.template
       Parameters:
+        botoConfig: '{"user_agent_extra": "AwsSolution/SO0153/__VERSION__"}'
         Project: !Ref Project
         CloudFormationBucketName: !Join ["-", [!FindInMap ["SourceCode", "General", "S3Bucket"], Ref: "AWS::Region"]]
         LambdaFunctionS3Key: !Join ["/", [!FindInMap ["SourceCode", "General", "KeyPrefix"],  "fsx-dns-name.zip"]] 

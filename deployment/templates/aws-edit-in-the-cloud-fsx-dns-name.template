@@ -28,6 +28,9 @@ Parameters:
     Type: String
     Default: cfn-repo/sgw/boto3-layer.zip
     Description: S3 key (path and file name) of the Boto3 SDK 'zip' archive.
+  botoConfig:
+    Type: String
+    Description: Botocore configuration parameters
 
 Resources:
   FSxDNSNameLambdaExecutionRole:
@@ -112,7 +115,9 @@ Resources:
         S3Key: !Ref LambdaFunctionS3Key
       Layers:
         - !Ref Boto3Layer
-      Environment: {}
+      Environment:
+        Variables:
+          botoConfig: !Ref botoConfig
       Handler: fsx-dns-name.handler
       MemorySize: 256
       Role:
