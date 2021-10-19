@@ -222,8 +222,8 @@ Resources:
             C:\cfn\scripts\install-gpu-drivers.ps1:
               source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}/install-gpu-drivers.ps1'
               authentication: S3AccessCreds
-            C:\cfn\scripts\install-teradici.ps1:
-              source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}/install-teradici.ps1'
+            C:\cfn\scripts\install-nicedcv.ps1:
+              source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}/install-nicedcv.ps1'
               authentication: S3AccessCreds
             C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\automount.bat:
               content: !Sub |
@@ -249,8 +249,8 @@ Resources:
             '10-reboot':
               command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\Restart-Computer.ps1'
               waitAfterCompletion: forever
-            '15-install-teradici':
-              command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\install-teradici.ps1 -Verbose'
+            '15-install-nicedcv':
+              command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\install-nicedcv.ps1 -Verbose'
               waitAfterCompletion: '0'
         joinDomain:
           commands:
