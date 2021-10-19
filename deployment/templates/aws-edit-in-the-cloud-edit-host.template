@@ -144,6 +144,10 @@ Resources:
                   - s3:GetObject
                 Resource: 'arn:aws:s3:::ec2-windows-nvidia-drivers/*'
                 Effect: Allow
+              - Action:
+                  - s3:GetObject
+                Resource: !Sub 'arn:aws:s3:::dcv-license.${AWS::Region}/*'
+                Effect: Allow
           PolicyName: aws-s3-policy
       Path: /
       AssumeRolePolicyDocument:

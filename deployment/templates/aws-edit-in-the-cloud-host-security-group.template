@@ -52,6 +52,16 @@ Resources:
           FromPort: 4172
           ToPort: 4172
           CidrIp: !Ref 'HostAccessCIDR'
+        - IpProtocol: tcp
+          Description: "NiceDCV"
+          FromPort: 8443
+          ToPort: 8443
+          CidrIp: !Ref 'HostAccessCIDR'
+        - IpProtocol: udp
+          Description: "NiceDCV"
+          FromPort: 8443
+          ToPort: 8443
+          CidrIp: !Ref 'HostAccessCIDR'
       VpcId: !Ref 'VPCID'
 Outputs:
   EditInstanceSG:
