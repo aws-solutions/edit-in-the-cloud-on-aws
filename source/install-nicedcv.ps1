@@ -42,7 +42,7 @@ try {
        Write-Host "Start install of NiceDCV ..."
        # '/NoPostReboot' - to prevent reboot
        #
-       Start-Process msiexec.exe -ArgumentList "/I $Destination", '/quiet','/norestart', '/l*v dcv_install_msi.log'  -Wait
+       Start-Process msiexec.exe -ArgumentList "/I $Destination", 'AUTOMATIC_SESSION_OWNER=Administrator', '/quiet','/norestart', '/l*v dcv_install_msi.log'  -Wait
     } else {
         throw "Problem installing NiceDCV, not .msi extension"
     }
