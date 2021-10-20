@@ -91,6 +91,13 @@ Parameters:
     Type: String
     Description: Amazon EC2 instance type for the video editing server
     Default: g4dn.4xlarge
+  RemoteDisplayProtocol:
+    Description: Remote Display Protocol configured on the instance (Teradici PCoIP | NiceDCV)
+    Type: String
+    Default: teradici
+    AllowedValues:
+      - teradici
+      - nicedcv
   Windows2019AmiId:
     Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
     Default: '/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base'
@@ -124,6 +131,11 @@ Parameters:
       S3 key prefix for the CloudFormation assets. The key prefix can include numbers,
       lowercase letters, uppercase letters, hyphens (-), and forward slash (/).
     Type: String
+
+Conditions:
+  DeployTeradici: !Equals [!Ref RemoteDisplayProtocol, teradici]
+  DeployNiceDCV: !Equals [!Ref RemoteDisplayProtocol, nicedcv]
+
 Resources:
   EditHostRole:
     Type: AWS::IAM::Role
@@ -144,10 +156,13 @@ Resources:
                   - s3:GetObject
                 Resource: 'arn:aws:s3:::ec2-windows-nvidia-drivers/*'
                 Effect: Allow
-              - Action:
-                  - s3:GetObject
-                Resource: !Sub 'arn:aws:s3:::dcv-license.${AWS::Region}/*'
-                Effect: Allow
+              - !If
+                - DeployNiceDCV
+                - Action:
+                    - s3:GetObject
+                  Resource: !Sub 'arn:aws:s3:::dcv-license.${AWS::Region}/*'
+                  Effect: Allow
+                - !Ref AWS::NoValue
           PolicyName: aws-s3-policy
       Path: /
       AssumeRolePolicyDocument:
@@ -179,6 +194,14 @@ Resources:
           config:
             - setup
             - configInstance
+            - !If 
+              - DeployNiceDCV
+              - installNiceDCV
+              - !Ref AWS::NoValue
+            - !If 
+              - DeployTeradici
+              - installTeradici
+              - !Ref AWS::NoValue
             - joinDomain
             - finalize
         setup:
@@ -226,9 +249,6 @@ Resources:
             C:\cfn\scripts\install-gpu-drivers.ps1:
               source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}/install-gpu-drivers.ps1'
               authentication: S3AccessCreds
-            C:\cfn\scripts\install-nicedcv.ps1:
-              source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}/install-nicedcv.ps1'
-              authentication: S3AccessCreds
             C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\automount.bat:
               content: !Sub |
                     @echo OFF
@@ -253,8 +273,23 @@ Resources:
             '10-reboot':
               command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\Restart-Computer.ps1'
               waitAfterCompletion: forever
-            '15-install-nicedcv':
+        installNiceDCV:
+          files: 
+            C:\cfn\scripts\install-nicedcv.ps1:
+              source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}/install-nicedcv.ps1'
+              authentication: S3AccessCreds
+          commands:
+            '01-install-nicedcv':
               command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\install-nicedcv.ps1 -Verbose'
+              waitAfterCompletion: '0'
+        installTeradici:
+          files:
+            C:\cfn\scripts\install-teradici.ps1:
+              source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}/install-teradici.ps1'
+              authentication: S3AccessCreds
+          commands:
+            '01-install-teradici':
+              command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\install-teradici.ps1 -Verbose'
               waitAfterCompletion: '0'
         joinDomain:
           commands:
