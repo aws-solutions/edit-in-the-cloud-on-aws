@@ -4,9 +4,9 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$false)]
-    [string]$Source = 'https://d1uj6qtbmh3dt5.cloudfront.net/2021.2/Servers/nice-dcv-server-x64-Release-2021.2-11135.msi',
+    [string]$Source = 'https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-server-x64-Release.msi',
     [Parameter(Mandatory=$false)]
-    [string]$Destination = 'C:\cfn\downloads\nice-dcv-server-x64-Release-2021.2-11135.msi'
+    [string]$Destination = 'C:\cfn\downloads\nice-dcv-server-x64-Release.msi'
 )
 
 try {
@@ -40,8 +40,9 @@ try {
 
     if ([System.IO.Path]::GetExtension($Destination) -eq '.msi') {
        Write-Host "Start install of NiceDCV ..."
-       # '/NoPostReboot' - to prevent reboot
-       #
+       # AUTOMATIC_SESSION_OWNER variable changes the default owner from SYSTEM to the local administrator
+       # '/norestart' - to prevent reboot
+       # 
        Start-Process msiexec.exe -ArgumentList "/I $Destination", 'AUTOMATIC_SESSION_OWNER=Administrator', '/quiet','/norestart', '/l*v dcv_install_msi.log'  -Wait
     } else {
         throw "Problem installing NiceDCV, not .msi extension"
