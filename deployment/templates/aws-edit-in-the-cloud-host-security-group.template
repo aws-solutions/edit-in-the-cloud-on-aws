@@ -49,11 +49,14 @@ Resources:
           FromPort: 3389
           ToPort: 3389
           CidrIp: !Ref 'HostAccessCIDR'
-        - IpProtocol: tcp
-          Description: "HTTPS"
-          FromPort: 443
-          ToPort: 443
-          CidrIp: !Ref 'HostAccessCIDR'
+        - !If 
+          - DeployTeradici
+          - IpProtocol: tcp
+            Description: "HTTPS"
+            FromPort: 443
+            ToPort: 443
+            CidrIp: !Ref 'HostAccessCIDR'
+          - !Ref AWS::NoValue
         - !If 
           - DeployTeradici
           - IpProtocol: udp
