@@ -38,6 +38,11 @@ try {
         }
     }
 
+    # Add a registry key to enable the QUIC (UDP) protocol in NiceDCV
+    New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS
+    New-Item -Path HKU:\S-1-5-18\Software\GSettings\com\nicesoftware\dcv\ -Name connectivity -Force
+    New-ItemProperty -Path HKU:\S-1-5-18\Software\GSettings\com\nicesoftware\dcv\connectivity\ -Name enable-quic-frontend -Value 1
+
     if ([System.IO.Path]::GetExtension($Destination) -eq '.msi') {
        Write-Host "Start install of NiceDCV ..."
        # AUTOMATIC_SESSION_OWNER variable changes the default owner from SYSTEM to the local administrator
