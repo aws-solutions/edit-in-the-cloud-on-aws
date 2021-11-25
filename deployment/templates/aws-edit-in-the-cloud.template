@@ -69,6 +69,8 @@ Metadata:
         default: Edit Host Access CIDR
       KeyPairName:
         default: Key Pair Name
+      RemoteDisplayProtocol:
+        default: Remote Display Protocol
       EditHostInstanceType:
         default: Amazon EC2 instance type for the video editing server
       PrivateSubnet1CIDR:
