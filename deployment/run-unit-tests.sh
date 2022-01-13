@@ -1,5 +1,7 @@
 #!/bin/bash
 #
+# There are currently no unit tests for this project.  
+#
 # This assumes all of the OS-level configuration has been completed and git repo has already been cloned
 #
 # This script should be run from the repo's deployment directory

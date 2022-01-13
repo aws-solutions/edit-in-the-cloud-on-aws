@@ -27,7 +27,16 @@ chmod +x ./build-s3-dist.sh
 ./build-s3-dist.sh $DIST_OUTPUT_BUCKET $SOLUTION_NAME $VERSION $TEMPLATE_OUTPUT_BUCKET
 ```
 
-* Deploy the distributable to an Amazon S3 bucket in your account. _Note:_ you must have the AWS Command Line Interface installed.
+> **Notes**: The _build-s3-dist_ script expects two S3 buckets as input parameters: one for the global assets, and one for regional assets. 
+
+Ensure that you are owner of the AWS S3 buckets passed to the build-s3-dist.sh script:
+
+```
+aws s3api head-bucket --bucket $TEMPLATE_OUTPUT_BUCKET --expected-bucket-owner YOUR-AWS-ACCOUNT-NUMBER
+aws s3api head-bucket --bucket $BUILD_OUTPUT_BUCKET --expected-bucket-owner YOUR-AWS-ACCOUNT-NUMBER
+```
+
+* Deploy the distributable to an Amazon S3 bucket in your account. 
 
 ```sh
 aws s3 cp global-s3-assets/  s3://$TEMPLATE_OUTPUT_BUCKET/$SOLUTION_NAME/$VERSION/ --recursive --acl bucket-owner-full-control

@@ -91,6 +91,7 @@ Resources:
       CompatibleRuntimes: 
         - python3.7
         - python3.8
+        - python3.9
       Content: 
         S3Bucket: !Ref CloudFormationBucketName
         S3Key: !Ref Boto3LayerS3Key
@@ -109,7 +110,7 @@ Resources:
     Properties:
       FunctionName: !Sub '${Project}-FSxDNSNameLambda'
       Description: Get FSx DNS Name (file_system_id)
-      Runtime: python3.8
+      Runtime: python3.9
       Code:
         S3Bucket: !Ref CloudFormationBucketName
         S3Key: !Ref LambdaFunctionS3Key

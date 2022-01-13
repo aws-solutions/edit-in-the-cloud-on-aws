@@ -8,6 +8,18 @@ Parameters:
   VPCID:
     Description: ID of the VPC (e.g., vpc-0343606e)
     Type: AWS::EC2::VPC::Id
+  RemoteDisplayProtocol:
+    Description: Remote Display Protocol configured on the instance (Teradici PCoIP | NICE DCV)
+    Type: String
+    Default: teradici
+    AllowedValues:
+      - teradici
+      - nicedcv
+
+Conditions:
+  DeployTeradici: !Equals [!Ref RemoteDisplayProtocol, teradici]
+  DeployNICEDCV: !Equals [!Ref RemoteDisplayProtocol, nicedcv]
+
 Resources:
   HostSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -37,21 +49,46 @@ Resources:
           FromPort: 3389
           ToPort: 3389
           CidrIp: !Ref 'HostAccessCIDR'
-        - IpProtocol: tcp
-          Description: "HTTPS"
-          FromPort: 443
-          ToPort: 443
-          CidrIp: !Ref 'HostAccessCIDR'
-        - IpProtocol: udp
-          Description: "Teradici PCoIP"
-          FromPort: 4172
-          ToPort: 4172
-          CidrIp: !Ref 'HostAccessCIDR'
-        - IpProtocol: tcp
-          Description: "Teradici PCoIP"
-          FromPort: 4172
-          ToPort: 4172
-          CidrIp: !Ref 'HostAccessCIDR'
+        - !If 
+          - DeployTeradici
+          - IpProtocol: tcp
+            Description: "HTTPS"
+            FromPort: 443
+            ToPort: 443
+            CidrIp: !Ref 'HostAccessCIDR'
+          - !Ref AWS::NoValue
+        - !If 
+          - DeployTeradici
+          - IpProtocol: udp
+            Description: "Teradici PCoIP"
+            FromPort: 4172
+            ToPort: 4172
+            CidrIp: !Ref 'HostAccessCIDR'
+          - !Ref AWS::NoValue
+        - !If 
+          - DeployTeradici
+          - IpProtocol: tcp
+            Description: "Teradici PCoIP"
+            FromPort: 4172
+            ToPort: 4172
+            CidrIp: !Ref 'HostAccessCIDR'
+          - !Ref AWS::NoValue
+        - !If 
+          - DeployNICEDCV
+          - IpProtocol: tcp
+            Description: "NICE DCV"
+            FromPort: 8443
+            ToPort: 8443
+            CidrIp: !Ref 'HostAccessCIDR'
+          - !Ref AWS::NoValue
+        - !If 
+          - DeployNICEDCV
+          - IpProtocol: udp
+            Description: "NICE DCV"
+            FromPort: 8443
+            ToPort: 8443
+            CidrIp: !Ref 'HostAccessCIDR'
+          - !Ref AWS::NoValue
       VpcId: !Ref 'VPCID'
 Outputs:
   EditInstanceSG:
