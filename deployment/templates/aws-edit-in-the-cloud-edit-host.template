@@ -84,6 +84,9 @@ Parameters:
     MaxLength: '15'
     MinLength: '1'
     Type: String
+  DomainMemberSGID:
+    Description: ID of the Domain Member Security Group (e.g., sg-7f16e910)
+    Type: AWS::EC2::SecurityGroup::Id
   HostSubnetId:
     Description: Subnet for edit host - should be public for remote access
     Type: String
@@ -333,6 +336,7 @@ Resources:
       NetworkInterfaces:
         - GroupSet:
             - !Ref 'ExistingHostSecurityGroupID'
+            - !Ref DomainMemberSGID
           DeviceIndex: '0'
           SubnetId: !Ref HostSubnetId
       KeyName: !Ref 'KeyPairName'

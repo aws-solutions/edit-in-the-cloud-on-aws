@@ -4,7 +4,9 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$false)]
-    [string]$Source = 'https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-server-x64-Release.msi',
+    #[string]$Source = 'https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-server-x64-Release.msi',
+    # Locking to 2021.3 to workaround permissions requirements for session sharing. 
+    [string]$Source = 'https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Servers/nice-dcv-server-x64-Release-2021.3-11591.msi',
     [Parameter(Mandatory=$false)]
     [string]$Destination = 'C:\cfn\downloads\nice-dcv-server-x64-Release.msi'
 )

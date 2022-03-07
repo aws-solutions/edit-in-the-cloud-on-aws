@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.1] - 2022-03-07
+
+### Changed
+
+- Set NICE DCV as the default remote display protocol
+- Teradici CAS as a remote display protocol option has been temporarily disabled in this release while we address a problem with deployment.
+- Passed correct VPC CIDR range to AD template when user customizes this value
+- Removed HostSG security group from FSx for Windows ENI
+- Updated access rules on security group attached to FSx for Windows to allow access only from Domain Members
+- Added Workstation to Domain Members security group
+- Removal of commented code and minor cleanups in top level template
+- NICE DCV set to use 2021.3 release. 
+
 ## [2.1.0] - 2021-01-12
 
 ### Changed

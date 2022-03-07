@@ -68,10 +68,6 @@ Resources:
             reason: "Using open egress so that FSX has full internet access"
           - id: W29
             reason: "Using open egress so that FSX has full internet access"
-          - id: W27
-            reason: "Port range required for Certificate Management over CMS"
-          - id: W9
-            reason: "Security Groups needs to be /16 to cover IP ranges in VPC"
     Properties:
       GroupDescription: Base Security Group for SecGrp
       VpcId: !Ref VPCID
@@ -88,109 +84,20 @@ Resources:
           CidrIp: 0.0.0.0/0
       SecurityGroupIngress:
         - IpProtocol: tcp
-          Description: "DNS"
-          CidrIp: 10.0.0.0/16
-          FromPort: 53
-          ToPort: 53
-        - IpProtocol: udp
-          Description: "DNS"
-          CidrIp: 10.0.0.0/16
-          FromPort: 53
-          ToPort: 53
-        - IpProtocol: udp
-          Description: "Kerberos"
-          CidrIp: 10.0.0.0/16
-          FromPort: 88
-          ToPort: 88
-        - IpProtocol: tcp
-          Description: "Kerberos"
-          CidrIp: 10.0.0.0/16
-          FromPort: 88
-          ToPort: 88
-        - IpProtocol: udp
-          Description: "NTP"
-          CidrIp: 10.0.0.0/16
-          FromPort: 123
-          ToPort: 123
-        - IpProtocol: tcp
-          Description: "NTP"
-          CidrIp: 10.0.0.0/16
-          FromPort: 135
-          ToPort: 135
-        - IpProtocol: udp
-          Description: "LDAP"
-          CidrIp: 10.0.0.0/16
-          FromPort: 389
-          ToPort: 389
-        - IpProtocol: tcp
-          Description: "LDAP"
-          CidrIp: 10.0.0.0/16
-          FromPort: 389
-          ToPort: 389
-        - IpProtocol: udp
-          Description: "Microsoft AD"
-          CidrIp: 10.0.0.0/16
+          Description: "Directory Services SMB file sharing"
+          SourceSecurityGroupId: !Ref DomainMemberSGID
           FromPort: 445
           ToPort: 445
         - IpProtocol: tcp
-          Description: "Microsoft AD"
-          CidrIp: 10.0.0.0/16
-          FromPort: 445
-          ToPort: 445
-        - IpProtocol: udp
-          Description: "Kerberos Change/Set password"
-          CidrIp: 10.0.0.0/16
-          FromPort: 464
-          ToPort: 464
-        - IpProtocol: tcp
-          Description: "Kerberos Change/Set password"
-          CidrIp: 10.0.0.0/16
-          FromPort: 464
-          ToPort: 464
-        - IpProtocol: tcp
-          Description: "LDAPS"
-          CidrIp: 10.0.0.0/16
-          FromPort: 636
-          ToPort: 636
-        - IpProtocol: tcp
-          Description: "Microsoft Global Catalog"
-          CidrIp: 10.0.0.0/16
-          FromPort: 3268
-          ToPort: 3269
-        - IpProtocol: tcp
-          Description: "Microsoft AD DS Web Services"
-          CidrIp: 10.0.0.0/16
-          FromPort: 9389
-          ToPort: 9389
-        - IpProtocol: tcp
-          Description: "Certificate Management over CMS"
-          CidrIp: 10.0.0.0/16
-          FromPort: 49152
-          ToPort: 65535
-  DomainMembersSGIngressUDP:
-    Type: "AWS::EC2::SecurityGroupIngress"
-    Properties:
-      Description: "Base Security Group for UDP Ingress"
-      GroupId: !Ref DomainMemberSGID
-      IpProtocol: udp
-      FromPort: 0
-      ToPort: 65535
-      SourceSecurityGroupId: !GetAtt FSXBaseSG.GroupId
-  DomainMembersSGIngressTCP:
-    Type: "AWS::EC2::SecurityGroupIngress"
-    Properties:
-      Description: "Base Security Group for TCP Ingress"
-      GroupId: !Ref DomainMemberSGID
-      IpProtocol: tcp
-      FromPort: 0
-      ToPort: 65535
-      SourceSecurityGroupId: !GetAtt FSXBaseSG.GroupId
+          Description: "WinRM 2.0 (Microsoft Windows Remote Management)"
+          SourceSecurityGroupId: !Ref DomainMemberSGID
+          FromPort: 5985
+          ToPort: 5985
   FSxFileSystem:
     Type: AWS::FSx::FileSystem
     Properties:
       FileSystemType: WINDOWS
       SecurityGroupIds:
-        - !Ref HostAccessSGID
         - !Ref DomainMemberSGID
         - !GetAtt "FSXBaseSG.GroupId"
       StorageCapacity: !Ref FileSystemSize
