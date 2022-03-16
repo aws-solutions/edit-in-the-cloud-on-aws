@@ -41,6 +41,7 @@ Metadata:
           - EditHostAccessCIDR
           - KeyPairName
           - RemoteDisplayProtocol
+          - TeradiciDownloadToken
       - Label:
           default: Microsoft Active Directory Configuration
         Parameters:
@@ -74,6 +75,8 @@ Metadata:
         default: Key Pair Name
       RemoteDisplayProtocol:
         default: Remote Display Protocol
+      TeradiciDownloadToken:
+        default: Teradici Download Token
       EditHostInstanceType:
         default: Amazon EC2 instance type for the video editing server
       PrivateSubnet1CIDR:
@@ -162,8 +165,11 @@ Parameters:
     Type: String
     Default: nicedcv
     AllowedValues:
-#      - teradici
+      - teradici
       - nicedcv
+  TeradiciDownloadToken:
+    Description: (REQUIRED if using Teradici). Download Token for Teradici Graphics Agent for Windows installer. Copy this 16-character token, located immediately after 'https://dl.teradici.com/' in the download URLs provided within the "Download using a script" section of https://docs.teradici.com/find/product/cloud-access-software, after signing in and agreeing to the EULA.
+    Type: String
   PrivateSubnet1CIDR:
     AllowedPattern: ^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/(1[6-9]|2[0-8]))$
     ConstraintDescription: CIDR block parameter must be in the form x.x.x.x/16-28
@@ -303,6 +309,7 @@ Resources:
         InstanceType: !Ref 'EditHostInstanceType'
         KeyPairName: !Ref 'KeyPairName'
         RemoteDisplayProtocol: !Ref 'RemoteDisplayProtocol'
+        TeradiciDownloadToken: !Ref 'TeradiciDownloadToken'
         HostSubnetId: !GetAtt 'VPCStack.Outputs.PublicSubnet1ID'
         FSxNetworkFileShare: !GetAtt 'FSXDNSNameStack.Outputs.FSxNetworkShare'
         SGWNetworkFileShare: 'NONE'

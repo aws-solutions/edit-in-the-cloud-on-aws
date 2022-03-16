@@ -10,6 +10,7 @@ Metadata:
           - ExistingHostSecurityGroupID
           - KeyPairName
           - RemoteDisplayProtocol
+          - TeradiciDownloadToken
           - FSxNetworkFileShare
           - SGWNetworkFileShare
       - Label:
@@ -39,6 +40,8 @@ Metadata:
         default: Key Pair Name
       RemoteDisplayProtocol:
         default: Remote Display Protocol
+      TeradiciDownloadToken:
+        default: Teradici Download Token
       InstanceType:
         default: Amazon EC2 instance type for the video editing server
       ExistingHostSecurityGroupID:
@@ -100,6 +103,9 @@ Parameters:
     AllowedValues:
       - teradici
       - nicedcv
+  TeradiciDownloadToken:
+    Description: (REQUIRED if using Teradici). Download Token for Teradici Graphics Agent for Windows installer. Copy this 16-character token, located immediately after 'https://dl.teradici.com/' in the download URLs provided within the "Download using a script" section of https://docs.teradici.com/find/product/cloud-access-software, after signing in and agreeing to the EULA.
+    Type: String
   InstanceType:
     Type: String
     Description: Amazon EC2 instance type for the video editing server
@@ -284,6 +290,11 @@ Resources:
             C:\cfn\scripts\install-nicedcv.ps1:
               source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}/install-nicedcv.ps1'
               authentication: S3AccessCreds
+            C:\Program Files\NICE\DCV\Server\conf\console-permissions.txt:
+              content: |
+                [permissions]
+                %owner% allow builtin
+                %any% allow builtin
           commands:
             '01-install-nicedcv':
               command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\install-nicedcv.ps1 -Verbose'
@@ -293,6 +304,9 @@ Resources:
             C:\cfn\scripts\install-teradici.ps1:
               source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}/install-teradici.ps1'
               authentication: S3AccessCreds
+            C:\cfn\scripts\conf.ps1:
+              content: !Sub |
+                $TeradiciDownloadToken = "${TeradiciDownloadToken}"
           commands:
             '01-install-teradici':
               command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\install-teradici.ps1 -Verbose'

@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2022-03-16
+
+- Update NICE DCV to latest release (2022.0)
+- Reinstate Teradici CAS
+- Update install process for Teradici CAS to request user provide download token from Teradici portal (https://docs.teradici.com/find/product/cloud-access-software)
+
 ## [2.1.1] - 2022-03-07
 
 ### Changed

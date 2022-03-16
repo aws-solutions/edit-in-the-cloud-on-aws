@@ -4,9 +4,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$false)]
-    #[string]$Source = 'https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-server-x64-Release.msi',
-    # Locking to 2021.3 to workaround permissions requirements for session sharing. 
-    [string]$Source = 'https://d1uj6qtbmh3dt5.cloudfront.net/2021.3/Servers/nice-dcv-server-x64-Release-2021.3-11591.msi',
+    [string]$Source = 'https://d1uj6qtbmh3dt5.cloudfront.net/nice-dcv-server-x64-Release.msi',
     [Parameter(Mandatory=$false)]
     [string]$Destination = 'C:\cfn\downloads\nice-dcv-server-x64-Release.msi'
 )
@@ -40,8 +38,14 @@ try {
         }
     }
 
-    # Add a registry key to enable the QUIC (UDP) protocol in NiceDCV
+    # Add a registry key to enable a default Administrator session & the QUIC (UDP) protocol in NiceDCV
     New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS
+    New-Item -Path "HKU:\S-1-5-18\Software\GSettings\com\nicesoftware\dcv\session-management" -Force
+    New-Item -Path "HKU:\S-1-5-18\Software\GSettings\com\nicesoftware\dcv\session-management\automatic-console-session" -Force
+    New-ItemProperty -Path "HKU:\S-1-5-18\Software\GSettings\com\nicesoftware\dcv\session-management" -Name create-session -PropertyType DWord -Value 1
+    New-ItemProperty -Path "HKU:\S-1-5-18\Software\GSettings\com\nicesoftware\dcv\session-management\automatic-console-session" -Name owner -Value Administrator
+    New-ItemProperty -Path "HKU:\S-1-5-18\Software\GSettings\com\nicesoftware\dcv\session-management\automatic-console-session" -Name permissions-file -Value "C:\Program Files\NICE\DCV\Server\conf\console-permissions.txt"
+    # Set up QUIC
     New-Item -Path HKU:\S-1-5-18\Software\GSettings\com\nicesoftware\dcv\ -Name connectivity -Force
     New-ItemProperty -Path HKU:\S-1-5-18\Software\GSettings\com\nicesoftware\dcv\connectivity\ -Name enable-quic-frontend -Value 1
 
@@ -50,7 +54,7 @@ try {
        # AUTOMATIC_SESSION_OWNER variable changes the default owner from SYSTEM to the local administrator
        # '/norestart' - to prevent reboot
        # 
-       Start-Process msiexec.exe -ArgumentList "/I $Destination", 'AUTOMATIC_SESSION_OWNER=Administrator', '/quiet','/norestart', '/l*v dcv_install_msi.log'  -Wait
+       Start-Process msiexec.exe -ArgumentList "/I $Destination", '/quiet','/norestart', '/l*v dcv_install_msi.log'  -Wait
     } else {
         throw "Problem installing NiceDCV, not .msi extension"
     }

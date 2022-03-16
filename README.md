@@ -1,8 +1,37 @@
 # AWS Edit in the Cloud
 
-This step-by-step guide details how to deploy an edit host, storage, and connectivity on AWS. This template allows users to build additional features, and add functionality, into an Amazon Elastic Compute Cloud (Amazon EC2) deployment. By incorporating Amazon FSx for Windows File Server, you can utilize a central repository for your media assets while providing an easy connection to your EC2 instance. The template also includes AWS Directory Services in conjunction with Teradici for federated login to allow for seamless editorial experience. Once you are logged into AWS Management Console, use this AWS CloudFormation deployment template.
+This step-by-step guide details how to deploy an edit host, storage, and connectivity on AWS. This template allows users to build additional features, and add functionality, into an Amazon Elastic Compute Cloud (Amazon EC2) deployment. By incorporating Amazon FSx for Windows File Server, you can utilize a central repository for your media assets while providing an easy connection to your EC2 instance. The template also includes AWS Directory Services for federated login to allow for seamless editorial experience. Once you are logged into AWS Management Console, use this AWS CloudFormation deployment template.
 
-## Building distributable for customization
+When deploying this solution, you are able to select from either Teradici CAS (https://www.teradici.com/products/CAS-cloud-access-software) or NICE DCV (https://aws.amazon.com/hpc/dcv/) as the Remote Display Protocol installed on the EC2 based Edit Workstation. 
+
+## Teradici CAS Installation Notes
+
+In order to download the Teradici CAS Graphics Agent for Windows, customers are issued with a unique download token by Teradici. This solution prompts for this token as a parameter of the CloudFormation template used to deploy from. 
+
+To obtain the download token from Teradici:
+
+1. Open https://docs.teradici.com/find/product/cloud-access-software
+2. Click on the download link for the Teradici Graphics Agent for Windows.
+3. You will be prompted to sign in (if not already signed in).
+4. After signing in, click on the "Downloads and scripts" link.
+5. You will be prompted to agree to an EULA. 
+6. After reviewing and agreeing to the EULA, click on the "Download using a script" link.
+7. Example download commands using cURL will be displayed. Each sample command contains a download URL which contains a 16-character token that immediately follows "https://dl.teradici.com/", for example "https://dl.teradici.com/1234567890abcdef/pcoip-agent/...." where "1234567890abcdef" is the token. Copy this token, it is unique to your Teradici login. 
+8. Use this token in the TeradiciDownloadToken parameter required by the CloudFormation template in this solution. 
+
+Teradici client software can also be obtained from the same site. 
+
+Teradici CAS installations require a subscription which can be obtained from Teradici. Please see the AWS Edit in the Cloud Implementation Guide (https://docs.aws.amazon.com/solutions/latest/aws-edit-in-the-cloud/welcome.html) for details on obtaining and applying a license for this sofware after the solution is deployed. 
+
+## NICE DCV Installation Notes
+
+You do not need a license server to install and use NICE DCV on an EC2 instance. This solution sets up the necessary access to a specific S3 bucket which is used to obtain a license for NICE DCV when running on EC2. 
+
+NICE DCV clients for Windows, MacOS and Linux can be downloaded from https://download.nice-dcv.com/ 
+
+## Development Notes
+
+### Building distributable for customization
 
 * Configure the bucket name of your target Amazon S3 distribution bucket
 
@@ -53,7 +82,7 @@ echo "https://s3.amazonaws.com/$TEMPLATE_OUTPUT_BUCKET/$SOLUTION_NAME/$VERSION/$
 
 ***
 
-## File Structure
+### File Structure
 
 ```text
 |-deployment/

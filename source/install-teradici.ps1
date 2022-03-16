@@ -4,13 +4,21 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$false)]
-    [string]$Source = 'https://downloads.teradici.com/win/stable/PCoIP_agent_release_installer_graphics.exe',
+    [string]$TeradiciDownloadToken,
     [Parameter(Mandatory=$false)]
     [string]$Destination = 'C:\cfn\downloads\PCoIP_agent_release_installer_graphics.exe'
 )
 
 try {
     $ErrorActionPreference = "Stop"
+
+    if($TeradiciDownloadToken -eq [string]::Empty) {
+        Write-Host "No Token passed, reading config file"
+        # Read in the configuration written in by CloudFormation
+        . "C:\cfn\scripts\conf.ps1"
+    }
+
+    $Source = "https://dl.teradici.com/$TeradiciDownloadToken/pcoip-agent/raw/names/pcoip-agent-graphics-exe/versions/latest/pcoip-agent-graphics_latest.exe" 
 
     $parentDir = Split-Path $Destination -Parent
     if (-not (Test-Path $parentDir)) {
