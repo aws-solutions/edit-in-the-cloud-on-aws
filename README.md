@@ -1,4 +1,4 @@
-# AWS Edit in the Cloud
+# Edit in the Cloud on AWS
 
 This step-by-step guide details how to deploy an edit host, storage, and connectivity on AWS. This template allows users to build additional features, and add functionality, into an Amazon Elastic Compute Cloud (Amazon EC2) deployment. By incorporating Amazon FSx for Windows File Server, you can utilize a central repository for your media assets while providing an easy connection to your EC2 instance. The template also includes AWS Directory Services for federated login to allow for seamless editorial experience. Once you are logged into AWS Management Console, use this AWS CloudFormation deployment template.
 
@@ -21,7 +21,7 @@ To obtain the download token from Teradici:
 
 Teradici client software can also be obtained from the same site. 
 
-Teradici CAS installations require a subscription which can be obtained from Teradici. Please see the AWS Edit in the Cloud Implementation Guide (https://docs.aws.amazon.com/solutions/latest/aws-edit-in-the-cloud/welcome.html) for details on obtaining and applying a license for this sofware after the solution is deployed. 
+Teradici CAS installations require a subscription which can be obtained from Teradici. Please see the Edit in the Cloud on AWS Implementation Guide (https://docs.aws.amazon.com/solutions/latest/aws-edit-in-the-cloud/welcome.html) for details on obtaining and applying a license for this sofware after the solution is deployed. 
 
 ## NICE DCV Installation Notes
 
@@ -36,7 +36,7 @@ NICE DCV clients for Windows, MacOS and Linux can be downloaded from https://dow
 * Configure the bucket name of your target Amazon S3 distribution bucket
 
 ```sh
-export SOLUTION_NAME=aws-edit-in-the-cloud
+export SOLUTION_NAME=edit-in-the-cloud-on-aws
 export VERSION=v1.0.1
 export BUCKET_PREFIX=my_s3_bucket # change this variable to the basename of your S3 bucket
 export REGION_TO_TEST=us-west-2 # change this variable to the region of your S3 bucket
