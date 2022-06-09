@@ -18,22 +18,25 @@ Metadata:
         Parameters:
           - DomainDNSName
           - DomainNetBIOSName
-          - DomainAdminUser
-          - DomainAdminPassword
+          - DirectoryId
+          - ADServer1PrivateIP
+          - ADServer2PrivateIP
       - Label:
           default: CloudFormation Resource Location
         Parameters:
           - CloudFormationBucketName
           - CloudFormationKeyPrefix
     ParameterLabels:
-      DomainAdminUser:
-        default: Domain Admin User
-      DomainAdminPassword:
-        default: Domain Admin Password
       DomainDNSName:
         default: Domain DNS Name
       DomainNetBIOSName:
         default: Domain NetBIOS Name
+      DirectoryId:
+        default: Managed AD Directory ID
+      ADServer1PrivateIP:
+        default: First IP address of Managed AD
+      ADServer2PrivateIP:
+        default: Second IP address of Managed AD
       HostSubnetId:
         default: Subnet for edit host - should be public for remote access 
       KeyPairName:
@@ -55,21 +58,14 @@ Metadata:
       CloudFormationKeyPrefix:
         default: CloudFormation S3 Key Prefix
 Parameters:
-  DomainAdminPassword:
-    AllowedPattern: (?=^.{6,255}$)((?=.*\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*
-    Description: Password for the domain admin user. Must be at least 8 characters
-      containing letters, numbers and symbols
-    MaxLength: '32'
-    MinLength: '8'
-    NoEcho: 'true'
+  DirectoryId:
+    Description: Managed AD Directory ID
     Type: String
-  DomainAdminUser:
-    AllowedPattern: '[a-zA-Z0-9]*'
-    Default: Admin
-    Description: User name for the account that will be added as Domain Administrator.
-      This is separate from the default "Administrator" account
-    MaxLength: '25'
-    MinLength: '5'
+  ADServer1PrivateIP:
+    Description: IP address of first Managed AD Server
+    Type: String
+  ADServer2PrivateIP:
+    Description: IP address of second Managed AD Server
     Type: String
   DomainDNSName:
     AllowedPattern: '[a-zA-Z0-9]+\..+'
@@ -176,6 +172,9 @@ Resources:
                   Effect: Allow
                 - !Ref AWS::NoValue
           PolicyName: aws-s3-policy
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMDirectoryServiceAccess
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
       Path: /
       AssumeRolePolicyDocument:
         Statement:
@@ -214,7 +213,6 @@ Resources:
               - DeployTeradici
               - installTeradici
               - !Ref AWS::NoValue
-            - joinDomain
             - finalize
         setup:
           services:
@@ -228,12 +226,6 @@ Resources:
               authentication: S3AccessCreds
             C:\cfn\modules\AWSQuickStart.zip:
               source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}/AWSQuickStart.zip'
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Restart-Computer.ps1:
-              source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}/Restart-Computer.ps1'
-              authentication: S3AccessCreds
-            C:\cfn\scripts\Join-Domain.ps1:
-              source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}/Join-Domain.ps1'
               authentication: S3AccessCreds
           commands:
             a-set-execution-policy:
@@ -282,9 +274,9 @@ Resources:
             '05-install-gpu-drivers':
               command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\install-gpu-drivers.ps1 -Verbose'
               waitAfterCompletion: '0'
-            '10-reboot':
-              command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\Restart-Computer.ps1'
-              waitAfterCompletion: forever
+            # '10-reboot':
+            #   command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\Restart-Computer.ps1'
+            #   waitAfterCompletion: forever
         installNICEDCV:
           files: 
             C:\cfn\scripts\install-nicedcv.ps1:
@@ -311,21 +303,14 @@ Resources:
             '01-install-teradici':
               command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\install-teradici.ps1 -Verbose'
               waitAfterCompletion: '0'
-        joinDomain:
+        restartComputer:
+          files:
+            C:\cfn\scripts\Restart-Computer.ps1:
+              source: !Sub 'https://${CloudFormationBucketName}.s3.${AWS::Region}.${AWS::URLSuffix}/${CloudFormationKeyPrefix}/Restart-Computer.ps1'
+              authentication: S3AccessCreds
           commands:
-            join-domain:
-              command: !Join
-                - ''
-                - - powershell.exe  -ExecutionPolicy Unrestricted C:\cfn\scripts\Join-Domain.ps1
-                  - ' -DomainName "'
-                  - !Ref 'DomainDNSName'
-                  - '" -UserName "'
-                  - !Ref 'DomainNetBIOSName'
-                  - '\'
-                  - !Ref 'DomainAdminUser'
-                  - '" -Password "'
-                  - !Ref 'DomainAdminPassword'
-                  - '"'
+            '01-restart-computer':
+              command: 'powershell.exe -ExecutionPolicy Unrestricted C:\cfn\scripts\Restart-Computer.ps1'
               waitAfterCompletion: forever
         finalize:
           commands:
@@ -354,6 +339,23 @@ Resources:
           DeviceIndex: '0'
           SubnetId: !Ref HostSubnetId
       KeyName: !Ref 'KeyPairName'
+      SsmAssociations:
+        -
+          DocumentName: "AWS-JoinDirectoryServiceDomain"
+          AssociationParameters:
+            - 
+              Key: "directoryId"
+              Value: 
+                - !Ref DirectoryId
+            - 
+              Key: "directoryName"
+              Value: 
+                - !Ref DomainDNSName
+            - 
+              Key: "dnsIpAddresses"
+              Value:
+                - !Ref ADServer1PrivateIP
+                - !Ref ADServer2PrivateIP
       UserData: !Base64
         Fn::Join:
           - ''

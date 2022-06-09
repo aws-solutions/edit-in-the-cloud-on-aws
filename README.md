@@ -36,7 +36,7 @@ NICE DCV clients for Windows, MacOS and Linux can be downloaded from https://dow
 * Configure the bucket name of your target Amazon S3 distribution bucket
 
 ```sh
-export SOLUTION_NAME=edit-in-the-cloud-on-aws
+export SOLUTION_NAME=aws-edit-in-the-cloud
 export VERSION=v1.0.1
 export BUCKET_PREFIX=my_s3_bucket # change this variable to the basename of your S3 bucket
 export REGION_TO_TEST=us-west-2 # change this variable to the region of your S3 bucket

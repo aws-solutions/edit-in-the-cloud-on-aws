@@ -301,8 +301,9 @@ Resources:
             - KeyPrefix
           - aws-edit-in-the-cloud-edit-host.template
       Parameters:
-        DomainAdminPassword: !Ref 'DomainAdminPassword'
-        DomainAdminUser: !Ref 'DomainAdminUser'
+        DirectoryId: !GetAtt 'ADStack.Outputs.DirectoryID'
+        ADServer1PrivateIP: !GetAtt 'ADStack.Outputs.ADServer1PrivateIP'
+        ADServer2PrivateIP: !GetAtt 'ADStack.Outputs.ADServer2PrivateIP'
         DomainDNSName: !Ref 'DomainDNSName'
         DomainMemberSGID: !GetAtt 'ADStack.Outputs.DomainMemberSGID'
         DomainNetBIOSName: !Ref 'DomainNetBIOSName'
