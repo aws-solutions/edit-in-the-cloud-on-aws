@@ -8,6 +8,8 @@ Param(
     [Parameter(Mandatory=$false)]
     [string]$GpuDriverBucketPrefix = '/latest',
     [Parameter(Mandatory=$false)]
+    [string]$GpuDriverBucketRegion = 'us-east-1',
+    [Parameter(Mandatory=$false)]
     [string]$DownloadDir = 'c:\cfn\downloads',
     [Parameter(Mandatory=$false)]
     [string]$UnzipDir = 'c:\cfn\downloads\gpu-drivers'
@@ -27,11 +29,11 @@ Param(
 #
 # returns the full pathname of the driver filename
 #
-function downloadGpuDrivers($Bucket, $BucketPrefix, $OsMatchStr, $DownloadDir) {
+function downloadGpuDrivers($Bucket, $BucketPrefix, $BucketRegion, $OsMatchStr, $DownloadDir) {
     Write-Host "Download from $Bucket and match on $OsMatchStr"
     $DriverFilename = '<not found>'
     # https://docs.aws.amazon.com/powershell/latest/reference/TOC.html
-    $Objects = Get-S3Object -BucketName $Bucket -Prefix $BucketPrefix
+    $Objects = Get-S3Object -BucketName $Bucket -Prefix $BucketPrefix -Region $BucketRegion
     foreach ($Object in $Objects) {
         Write-Host $Object.Key
         $FileName = $Object.Key
@@ -42,7 +44,7 @@ function downloadGpuDrivers($Bucket, $BucketPrefix, $OsMatchStr, $DownloadDir) {
         if ($FileName -ne '' -and $Object.Size -ne 0 -and
            ($FileName -match $OsMatchStr -or $FileName -match 'LicenseAgreement')) {
 		    $FullFilePath = Join-Path $DownloadDir $FileName
-	        Copy-S3Object -BucketName $Bucket -Key $Object.Key -LocalFile $FullFilePath
+	        Copy-S3Object -BucketName $Bucket -Key $Object.Key -LocalFile $FullFilePath -Region $BucketRegion
             Write-Host "Copying file $FileName"
             Write-Host "LocalFileName: $LocalFileName"
             Write-Host "FullFilePath: $FullFilePath"
@@ -130,7 +132,7 @@ function OptimizeGpu() {
 try {
     $ErrorActionPreference = "Stop"
 
-    $GpuDriverFilename = downloadGpuDrivers -Bucket $GpuDriverBucket -BucketPrefix $GpuDriverBucketPrefix -OsMatchStr 'win10' -DownloadDir $DownloadDir
+    $GpuDriverFilename = downloadGpuDrivers -Bucket $GpuDriverBucket -BucketPrefix $GpuDriverBucketPrefix -BucketRegion $GpuDriverBucketRegion -OsMatchStr 'win10' -DownloadDir $DownloadDir
     Write-Host "filename = '$GpuDriverFilename'"
     unzipGpuDrivers -Filename $GpuDriverFilename -Destination $UnzipDir
     InstallGpuDrivers -SetupDir $UnzipDir
