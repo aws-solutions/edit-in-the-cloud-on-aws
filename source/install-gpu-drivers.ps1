@@ -31,7 +31,7 @@ function downloadGpuDrivers($Bucket, $BucketPrefix, $OsMatchStr, $DownloadDir) {
     Write-Host "Download from $Bucket and match on $OsMatchStr"
     $DriverFilename = '<not found>'
     # https://docs.aws.amazon.com/powershell/latest/reference/TOC.html
-    $Objects = Get-S3Object -BucketName $Bucket -Prefix $BucketPrefix
+    $Objects = Get-S3Object -BucketName $Bucket -Prefix $BucketPrefix -Region us-east-1
     foreach ($Object in $Objects) {
         Write-Host $Object.Key
         $FileName = $Object.Key
@@ -42,7 +42,7 @@ function downloadGpuDrivers($Bucket, $BucketPrefix, $OsMatchStr, $DownloadDir) {
         if ($FileName -ne '' -and $Object.Size -ne 0 -and
            ($FileName -match $OsMatchStr -or $FileName -match 'LicenseAgreement')) {
 		    $FullFilePath = Join-Path $DownloadDir $FileName
-	        Copy-S3Object -BucketName $Bucket -Key $Object.Key -LocalFile $FullFilePath
+	        Copy-S3Object -BucketName $Bucket -Key $Object.Key -LocalFile $FullFilePath -Region us-east-1
             Write-Host "Copying file $FileName"
             Write-Host "LocalFileName: $LocalFileName"
             Write-Host "FullFilePath: $FullFilePath"
