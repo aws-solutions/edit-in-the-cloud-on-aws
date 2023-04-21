@@ -5,10 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.3.1] - 2022-11-18
-### Fixed 
-- Update Nvidia Driver installer for Cloud Editing hosts script updated to pull GPU drivers from us-east-1 bucket location. This fixes regions outside of us-east-1 that were unable to install drivers for hosts provisioned outside of us-east-1
+## [2.3.2] - 2022-04-20
 
+- Update the latest GRID /NVIDIA driver location to C:\Windows\System32\DriverStore\FileRepository\nvgrid*\ instead of  C:\Program Files\NVIDIA Corporation\NVSMI
+
+## [2.3.1] - 2022-11-03
+
+- Added -region us-east-1 argument to s3 download cmd for GPU Drivers
 
 ## [2.3.0] - 2022-06-09
 
