@@ -5,23 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.0] - 2023-07-25
+
+### Added
+
+- Added ability to opt in or out of anonymized data collection when solution is deployed
+- Added App Registry to this solution
+- Updated solution to Node.js 18
+- Note this update is not backward compatible and a new CloudFormation template must be launched. 
+
 ## [2.3.2] - 2022-04-20
+
+### Changed
 
 - Update the latest GRID /NVIDIA driver location to C:\Windows\System32\DriverStore\FileRepository\nvgrid*\ instead of  C:\Program Files\NVIDIA Corporation\NVSMI
 
 ## [2.3.1] - 2022-11-03
 
+### Added
+
 - Added -region us-east-1 argument to s3 download cmd for GPU Drivers
 
 ## [2.3.0] - 2022-06-09
+
+### Changed
 
 - Update the Domain Join process to use Systems Manager Document rather than powershell [Github Issue #7]
 
 ## [2.2.0] - 2022-03-16
 
+### Changed
+
 - Update NICE DCV to latest release (2022.0)
 - Reinstate Teradici CAS
-- Update install process for Teradici CAS to request user provide download token from Teradici portal (https://docs.teradici.com/find/product/cloud-access-software)
+- Update install process for Teradici CAS to request user provide download token from Teradici portal <https://docs.teradici.com/find/product/cloud-access-software>
 
 ## [2.1.1] - 2022-03-07
 
@@ -34,7 +51,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated access rules on security group attached to FSx for Windows to allow access only from Domain Members
 - Added Workstation to Domain Members security group
 - Removal of commented code and minor cleanups in top level template
-- NICE DCV set to use 2021.3 release. 
+- NICE DCV set to use 2021.3 release
 
 ## [2.1.0] - 2021-01-12
 
@@ -45,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added support for NICE DCV as a Remote Display Protocol. Default set to Teradici CAS. 
+- Added support for NICE DCV as a Remote Display Protocol. Default set to Teradici CAS
 - Added powershell script to install NICE DCV from latest release (if selected)
 - Added support for NICE DCV TCP and UDP protocol to host security group (if selected)
 - Added permission to obtain NICE DCV license via s3:GetObject permissions in IAM Role (if selected)
@@ -64,7 +81,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added new parameter for selecting which version of AWS managed AD to provision, default set to standard
 - Added a .viperlightrc file to assist automated code scanning
 - Added metrics disclosure to README
-
 
 ## [1.0.1] - 2021-05-27
 

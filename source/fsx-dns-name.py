@@ -16,12 +16,16 @@ from botocore.config import Config
 from crhelper import CfnResource
 import logging
 
-# Init boto config
-
-BOTO_CONFIG = json.loads(os.environ['botoConfig'])
-CONFIG = Config(**BOTO_CONFIG)
-
 logger = logging.getLogger(__name__)
+
+# Init boto config
+CONFIG = Config()
+send_anonymized_data = os.environ['SendAnonymizedMetric']
+if send_anonymized_data == 'Yes':
+    logger.info('Collecting Anonymized API Metrics')
+    BOTO_CONFIG = json.loads(os.environ['botoConfig'])
+    CONFIG = Config(**BOTO_CONFIG)
+
 # Initialise the helper, all inputs are optional, this example shows the defaults
 
 helper = CfnResource(json_logging=False, log_level='INFO', boto_level='CRITICAL')

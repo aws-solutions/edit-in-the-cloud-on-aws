@@ -1,43 +1,45 @@
 #!/bin/bash
 #
-# There are currently no unit tests for this project.  
-#
 # This assumes all of the OS-level configuration has been completed and git repo has already been cloned
 #
 # This script should be run from the repo's deployment directory
 # cd deployment
 # ./run-unit-tests.sh
 #
-
 # Get reference for all important folders
-template_dir="$PWD"
-source_dir="$template_dir/../source"
+declare -r root_dir="$(cd "`dirname "${BASH_SOURCE[0]}"`/.."; pwd)"
+source_dir="$root_dir/source"
+custom_resource_dir="$source_dir/custom-resource"
 
-# echo "------------------------------------------------------------------------------"
-# echo "[Init] Clean old dist and node_modules folders"
-# echo "------------------------------------------------------------------------------"
-# echo "find $source_dir/services -iname "node_modules" -type d -exec rm -r "{}" \; 2> /dev/null"
-# find $source_dir/services -iname "node_modules" -type d -exec rm -r "{}" \; 2> /dev/null
-# echo "find $source_dir/services -iname "dist" -type d -exec rm -r "{}" \; 2> /dev/null"
-# find $source_dir/services -iname "dist" -type d -exec rm -r "{}" \; 2> /dev/null
-# echo "find ../ -type f -name 'package-lock.json' -delete"
-# find $source_dir/services -type f -name 'package-lock.json' -delete
-# echo "find $source_dir/resources -iname "node_modules" -type d -exec rm -r "{}" \; 2> /dev/null"
-# find $source_dir/resources -iname "node_modules" -type d -exec rm -r "{}" \; 2> /dev/null
-# echo "find $source_dir/resources -iname "dist" -type d -exec rm -r "{}" \; 2> /dev/null"
-# find $source_dir/resources -iname "dist" -type d -exec rm -r "{}" \; 2> /dev/null
-# echo "find ../ -type f -name 'package-lock.json' -delete"
-# find $source_dir/resources -type f -name 'package-lock.json' -delete
-# echo "find $source_dir/simulator -iname "node_modules" -type d -exec rm -r "{}" \; 2> /dev/null"
-# find $source_dir/simulator -iname "node_modules" -type d -exec rm -r "{}" \; 2> /dev/null
-# echo "find $source_dir/simulator -iname "dist" -type d -exec rm -r "{}" \; 2> /dev/null"
-# find $source_dir/simulator -iname "dist" -type d -exec rm -r "{}" \; 2> /dev/null
-# echo "find ../ -type f -name 'package-lock.json' -delete"
-# find $source_dir/simulator -type f -name 'package-lock.json' -delete
+# launch python unit tests for cfn_check.py
+coverage run -m unit_tests
+coverage xml
+sed 's/filename="/filename="deployment\//g' coverage.xml > coverage_sonarqube.xml && mv coverage_sonarqube.xml coverage.xml
 
-# echo "------------------------------------------------------------------------------"
-# echo "[Test] Services - Example Function"
-# echo "------------------------------------------------------------------------------"
-# cd $source_dir/example-function-js
-# npm install
-# npm test
+echo coverage report coverage.xml created
+
+# launch python unit tests for fsx-dns-name.py
+cd $source_dir
+pip install -r requirements.txt
+coverage run -m fsx-dns-name-unit-tests
+coverage xml
+sed 's/filename="/filename="source\//g' coverage.xml > coverage_sonarqube.xml && mv coverage_sonarqube.xml coverage.xml
+
+run_component_test() {
+    local component_path=$1
+    local component_name=$2
+
+    echo "------------------------------------------------------------------------------"
+    echo "[Test] $component_name"
+    echo "------------------------------------------------------------------------------"
+    cd "$component_path"
+
+    # install and build for unit testing
+    npm install
+
+    # run unit tests
+    npm run test
+
+}
+
+run_component_test $custom_resource_dir 'Custom Resource'
