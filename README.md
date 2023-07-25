@@ -93,7 +93,7 @@ echo "https://s3.amazonaws.com/$TEMPLATE_OUTPUT_BUCKET/$SOLUTION_NAME/$VERSION/$
 
 ***
 
-This solution collects anonymous operational metrics to help AWS improve the
+This solution collects anonymized operational metrics to help AWS improve the
 quality of features of the solution. For more information, including how to disable
 this capability, please see the [implementation guide](https://docs.aws.amazon.com/solutions/latest/aws-edit-in-the-cloud/collection-of-operational-metrics.html)
 

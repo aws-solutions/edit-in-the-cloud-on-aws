@@ -13,6 +13,7 @@ source/package
 source/fgw-fileshare.zip
 source/fsx-dns-name.zip
 source/AWSQuickStart.zip
+source/custom-resource/custom-resource.zip
 
 ### OSX ###
 *.DS_Store
@@ -26,3 +27,12 @@ cfn-check.sh
 cfn-create.sh
 aws-edit-in-the-cloud-master-with-FSX.json
 cfn_nag_suppressions.log
+*.pyc
+coverage.xml
+.coverage
+
+### Node JS ###
+node_modules/
+
+### Coverage files ###
+coverage/

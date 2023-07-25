@@ -154,3 +154,15 @@ echo "zip -r9 -q 'AWSQuickStart.zip' . -i 'AWSQuickStart/*'"
 zip -r9 -q 'AWSQuickStart.zip' . -i 'AWSQuickStart/*'
 echo "cp AWSQuickStart.zip $build_dist_dir/AWSQuickStart.zip"
 cp AWSQuickStart.zip $build_dist_dir/AWSQuickStart.zip
+
+## custom-resource
+cd custom-resource
+echo "rm custom-resource.zip"
+rm custom-resource.zip
+echo "npm install"
+npm install
+echo "zip -r9 -q 'custom-resource.zip' . -i '*'"
+zip -r9 -q 'custom-resource.zip' . -i '*'
+echo "cp custom-resource.zip $build_dist_dir/custom-resource.zip"
+cp custom-resource.zip $build_dist_dir/custom-resource.zip
+cd $source_dir/

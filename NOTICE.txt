@@ -16,4 +16,10 @@ boto3 under the Apache License Version 2.0
 botocore under the Apache License Version 2.0
 logging under the Apache License Version 2.0
 Chocolatey under the Apache License Version 2.0
+coverage under the Apache License Version 2.0
 https://chocolatey.org/install.ps1
+axios under the Massachusetts Institute of Technology (MIT) license
+axios-mock-adapter under the Massachusetts Institute of Technology (MIT) license
+chai under the Massachusetts Institute of Technology (MIT) license
+jest under the Massachusetts Institute of Technology (MIT) license
+uuid under the Massachusetts Institute of Technology (MIT) license

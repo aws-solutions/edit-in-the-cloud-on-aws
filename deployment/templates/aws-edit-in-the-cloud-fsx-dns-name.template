@@ -1,6 +1,18 @@
+# Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License").
+# You may not use this file except in compliance with the License.
+# A copy of the License is located at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# or in the "license" file accompanying this file. This file is distributed
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+# express or implied. See the License for the specific language governing
+# permissions and limitations under the License.
+# The child templates we added an X to the end of the solutionID for so only the root template is counted in reporting. 
 AWSTemplateFormatVersion: 2010-09-09
-Description: >-
-  Create an FSx DNS NAME for Windows file system. [v1.0]
+Description: (SO0153X) - __SOLUTION_NAME__ __VERSION__ Create an FSx DNS NAME for Windows file system.
 Parameters:
   FSxFileSystemID:
     Description: ID for the FSx Filesystem
@@ -31,6 +43,9 @@ Parameters:
   botoConfig:
     Type: String
     Description: Botocore configuration parameters
+  SendAnonymizedMetric:
+    Type: String
+    Description: Flag to send anonymized metric
 
 Resources:
   FSxDNSNameLambdaExecutionRole:
@@ -119,11 +134,17 @@ Resources:
       Environment:
         Variables:
           botoConfig: !Ref botoConfig
+          SendAnonymizedMetric: !Ref SendAnonymizedMetric
       Handler: fsx-dns-name.handler
       MemorySize: 256
       Role:
         Fn::GetAtt: FSxDNSNameLambdaExecutionRole.Arn
       Timeout: 30
+  FSxDNSNameLambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Join ['/', ['/aws/lambda', !Ref FSxDNSNameLambda]]
+      RetentionInDays: 30
   FSxDNSName:
     DependsOn: FSxDNSNameLambdaExecutionPolicy
     Type: Custom::FSxDNSName
