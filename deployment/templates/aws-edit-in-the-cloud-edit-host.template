@@ -11,8 +11,8 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 # The child templates we added an X to the end of the solutionID for so only the root template is counted in reporting. 
-Description: (SO0153X) - __SOLUTION_NAME__ __VERSION__ Create a windows host with a custom volume size, create a role and security
-  group as well.
+Description: (SO0153X) - __SOLUTION_NAME__ Create a windows host with a custom volume size, create a role and security
+  group as well. Version __VERSION__
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:

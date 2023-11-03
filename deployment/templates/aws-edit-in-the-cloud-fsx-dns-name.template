@@ -12,7 +12,7 @@
 # permissions and limitations under the License.
 # The child templates we added an X to the end of the solutionID for so only the root template is counted in reporting. 
 AWSTemplateFormatVersion: 2010-09-09
-Description: (SO0153X) - __SOLUTION_NAME__ __VERSION__ Create an FSx DNS NAME for Windows file system.
+Description: (SO0153X) - __SOLUTION_NAME__ Create an FSx DNS NAME for Windows file system. Version __VERSION__
 Parameters:
   FSxFileSystemID:
     Description: ID for the FSx Filesystem
