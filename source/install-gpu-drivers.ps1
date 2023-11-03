@@ -115,7 +115,7 @@ function InstallGpuDrivers($SetupDir) {
 # https://docs.aws.amazon.com/AWSEC2/latest/WindowsGuide/optimize_gpu.html
 function OptimizeGpu() {
     # this is for G4 only
-    Set-Location "C:\Windows\System32\DriverStore\FileRepository\nvgrid*\"
+    Set-Location "C:\cfn\downloads\gpu-drivers\Display.Driver"
     .\nvidia-smi --auto-boost-default=0
     .\nvidia-smi -ac "5001,1590"
 }

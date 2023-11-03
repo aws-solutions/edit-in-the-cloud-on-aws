@@ -11,7 +11,7 @@
 # express or implied. See the License for the specific language governing
 # permissions and limitations under the License.
 # The child templates we added an X to the end of the solutionID for so only the root template is counted in reporting. 
-Description: (SO0153X) - __SOLUTION_NAME__ __VERSION__ Create a security group to allow for accessing the remote hosts.
+Description: (SO0153X) - __SOLUTION_NAME__ Create a security group to allow for accessing the remote hosts. Version __VERSION__
 Parameters:
   HostAccessCIDR:
     Default: 1.1.1.1/32
